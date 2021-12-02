@@ -247,7 +247,7 @@
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\ddot{x}=f\left(x\right)+g\left(x\right)u$
+\begin_inset Formula $\ddot{q}=f\left(q\right)+g\left(q\right)u$
 \end_inset
 
 
@@ -284,21 +284,7 @@
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $g_{\perp}\ddot{x}=g_{\perp}f$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $g_{\perp}X'\ddot{\theta}+g_{\perp}X''\dot{\theta}^{2}-g_{\perp}f=0$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $g_{\perp}X'=$
+\begin_inset Formula $g_{\perp}\ddot{q}=g_{\perp}f$
 \end_inset
 
 
@@ -309,6 +295,7 @@
 \end_layout
 
 \begin_layout Standard
+Динамика:
 \begin_inset Formula 
 \begin{align*}
 \ddot{x} & =-u\sin\phi-\varepsilon w\cos\phi\\
@@ -318,58 +305,101 @@
 
 \end_inset
 
-
+в матричном виде:
 \end_layout
 
 \begin_layout Standard
-—
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $f=\left(\begin{array}{c}
+\begin_inset Formula 
+\begin{align*}
+\ddot{q} & =f\left(q\right)+g\left(q\right)u\\
+f\left(q\right) & =\left(\begin{array}{c}
 0\\
 -1\\
 0
-\end{array}\right)$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $g=\left(\begin{array}{cc}
+\end{array}\right)\\
+g\left(q\right) & =\left(\begin{array}{cc}
 -\sin\phi & -\varepsilon\cos\phi\\
 \cos\phi & -\varepsilon\sin\phi\\
 0 & 1
-\end{array}\right)$
+\end{array}\right)
+\end{align*}
+
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $g_{\perp}g=0$
+Левый аннигилятор 
+\begin_inset Formula $g_{\perp}\left(q\right)g\left(q\right)=0$
 \end_inset
 
-
+:
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $g_{\perp}=\left(\cos\phi,\sin\phi,\epsilon\right)$
+\begin_inset Formula 
+\[
+g_{\perp}\left(q\right)=\left(\cos\phi,\sin\phi,\epsilon\right)
+\]
+
 \end_inset
 
-
+Виртуальная связь:
 \end_layout
 
 \begin_layout Standard
-—
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $X\left(\theta\right)=\left(\begin{array}{c}
+\begin_inset Formula 
+\[
+Q\left(\theta\right)=\left(\begin{array}{c}
 X\left(\theta\right)\\
 Z\left(\theta\right)\\
 \Phi\left(\theta\right)
+\end{array}\right)
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $g_{\perp}\left(Q''\dot{\theta}^{2}+Q'\ddot{\theta}\right)=g_{\perp}f$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\alpha=g_{\perp}Q'=\cos\phi X'+\sin\phi Z'+\epsilon\Phi'$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\beta=g_{\perp}Q''=\cos\phi X''+\sin\phi Z''+\epsilon\Phi''$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\gamma=-g_{\perp}f=\sin\phi$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Ищу функцию 
+\begin_inset Formula $Q$
+\end_inset
+
+ в виде полинома:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $Q=\left(\begin{array}{c}
+k_{1}\theta\\
+k_{2}\theta^{2}\\
+k_{3}+k_{4}\theta
 \end{array}\right)$
 \end_inset
 
@@ -377,14 +407,11 @@ Z\left(\theta\right)\\
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $g_{\perp}\left(X''\dot{\theta}^{2}+X'\ddot{\theta}\right)=g_{\perp}f$
-\end_inset
-
-
+—
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\cos\phi\left(X''\dot{\theta}^{2}+X'\ddot{\theta}\right)+\sin\phi\left(Z''\dot{\theta}^{2}+Z'\ddot{\theta}\right)+\epsilon\left(\Phi''\dot{\theta}^{2}+\Phi'\ddot{\theta}\right)=-\sin\Phi$
+\begin_inset Formula $g_{\perp}Q'=\cos\phi X'+\sin\phi Z'+\epsilon\Phi'$
 \end_inset
 
 
@@ -402,7 +429,51 @@ Z\left(\theta\right)\\
 \end_layout
 
 \begin_layout Standard
-\begin_inset space ~
+constraints:
+\end_layout
+
+\begin_layout Standard
+at zero:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\alpha_{0}=0$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $0<\alpha_{0}'$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $0<-\alpha_{0}^{'}-2\beta_{0}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+—
+\end_layout
+
+\begin_layout Standard
+on interval
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $0<\gamma_{\theta}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $0\leq\alpha_{\theta}\cdot\theta$
 \end_inset
 
 
@@ -413,6 +484,10 @@ Z\left(\theta\right)\\
 \end_inset
 
 
+\end_layout
+
+\begin_layout Standard
+—
 \end_layout
 
 \begin_layout Standard

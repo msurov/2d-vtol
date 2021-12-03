@@ -490,8 +490,48 @@ on interval
 —
 \end_layout
 
+\begin_layout Section
+Трансверсальная линеаризация
+\end_layout
+
 \begin_layout Standard
-\begin_inset space ~
+Система
+\begin_inset Formula 
+\begin{eqnarray*}
+\dot{x} & = & f\left(x,u\right),
+\end{eqnarray*}
+
+\end_inset
+
+её траектория 
+\begin_inset Formula $x_{\tau},u_{\tau}$
+\end_inset
+
+.
+ Трансверсальные координаты
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+x & =\alpha\left(\xi,\tau\right)\\
+ & =x_{\tau}+E_{\tau}\xi\\
+\xi & =\beta\left(x,\tau\right)\\
+ & =E_{\tau}^{T}\cdot\left(x-x_{\tau}\right)
+\end{align*}
+
+\end_inset
+
+Матрицы 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+A_{\tau}^{\xi} & :=E_{\tau}^{T}\left(\frac{\partial f\left(x\right)+g\left(x\right)u_{\tau}}{\partial x}\right)_{x=x_{\tau},u=u_{\tau}}E_{\tau}\\
+B_{\tau}^{\xi} & :=E_{\tau}^{T}g\left(x_{\tau}\right)
+\end{align*}
+
 \end_inset
 
 
@@ -526,7 +566,59 @@ on interval
 \end_layout
 
 \begin_layout Standard
-\begin_inset space ~
+\begin_inset Formula 
+\begin{align*}
+A_{\tau}^{x} & \equiv\left(\frac{\partial f\left(x,u\right)}{\partial x}\right)_{x=x_{\tau},u=u_{\tau}}E_{\tau}\\
+B_{\tau}^{x} & \equiv\left(\frac{\partial f\left(x,u\right)}{\partial u}\right)_{x=x_{\tau},u=u_{\tau}}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+Z_{\tau} & \equiv\frac{x_{\tau}^{'}\cdot\left(\frac{\partial f\left(x,u\right)}{\partial x}\right)_{x=x_{\tau},u=u_{\tau}}E_{\tau}}{x_{\tau}^{'}\cdot x_{\tau}^{'}}-\frac{x_{\tau}^{'}\cdot E_{\tau}^{'}}{x_{\tau}^{'}\cdot x_{\tau}^{'}}\\
+R_{\tau} & \equiv\frac{x_{\tau}^{'}\cdot g\left(x_{\tau}\right)}{x_{\tau}^{'}\cdot x_{\tau}^{'}}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+J & :=E_{\tau}\\
+n & =x_{\tau}^{'}
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+A_{\tau}^{\xi} & :=\left[\frac{\partial\beta\left(x,\tau\right)}{\partial x}A_{\tau}^{x}+\frac{dE_{\tau}^{T}}{d\tau}\cdot\left(x-x_{\tau}\right)Z_{\tau}\right]_{x=x_{\tau}}\\
+B_{\tau}^{\xi} & :=E_{\tau}^{T}g\left(x_{\tau}\right)
+\end{align*}
+
+\end_inset
+
+поскольку
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+x_{\tau}^{'}\cdot E_{\tau}=0
+\]
+
 \end_inset
 
 
@@ -554,7 +646,28 @@ on interval
 \end_layout
 
 \begin_layout Standard
+\begin_inset Formula $\frac{\partial\beta}{\partial\tau}=E_{\tau}^{T}\cdot\left(x-x_{\tau}\right)=\frac{dE_{\tau}^{T}}{d\tau}\cdot\left(x-x_{\tau}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
 \begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\beta\left(x,\tau\right)=E_{\tau}^{T}\cdot\left(x-x_{\tau}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\frac{\partial\beta\left(x,\tau\right)}{\partial x}x_{\tau}^{'}$
 \end_inset
 
 

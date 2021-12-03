@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.interpolate import make_interp_spline, splrep
-from dynamics import Dynamics, parameters, get_inv_dynamics
+from dynamics import Dynamics, get_inv_dynamics
 
 
 class ServoConnectionParametrized:
@@ -299,20 +299,25 @@ def plot_trajectory(traj):
 
     plt.tight_layout()
 
-def main():
-    d = Dynamics(parameters)
+def save_trajectory(dstfile, traj):
+    np.save(dstfile, traj, allow_pickle=True)
+
+def load_trajectory(trajfile):
+    traj = np.load(trajfile, allow_pickle=True).item()
+    return traj
+
+def main(dynamics, dstfile):
     c = ServoConnectionParametrized()
     theta_s = 0.
     theta_l = -0.5
     theta_r = 0.5
-    Q = find_singular_connection(theta_s, theta_l, theta_r, d, c)
-    rd = ReducedDynamics(d, Q)
+    Q = find_singular_connection(theta_s, theta_l, theta_r, dynamics, c)
+    rd = ReducedDynamics(dynamics, Q)
     rd_traj = solve_singular(rd, theta_s, theta_l, theta_r)
     plot_reduced_trajectory(rd_traj)
-    traj = get_trajectory(d, Q, rd_traj)
+    traj = get_trajectory(dynamics, Q, rd_traj)
     plot_trajectory(traj)
-    np.save('data/traj.npy', traj, allow_pickle=True)
-    # plt.show()
+    save_trajectory(dstfile, traj)
 
 if __name__ == '__main__':
     main()

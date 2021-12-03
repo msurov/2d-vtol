@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.interpolate import make_interp_spline
+from scipy.linalg import expm, logm
 import matplotlib.pyplot as plt
+from time import time
 
 
 def solve_ivp_mat(rhs, tspan, X0, **kwargs):
@@ -23,7 +25,10 @@ def solve_ivp_mat(rhs, tspan, X0, **kwargs):
 
 def tangent(c, t):
     v = c(t, 1)
-    return v / np.linalg.norm(v)
+    n = np.linalg.norm(v, axis=-1)
+    if np.shape(t) == ():
+        return v / n
+    return v / n[:,np.newaxis]
 
 def curvature(c, t):
     '''
@@ -53,7 +58,15 @@ def get_vec_basis(v):
         basis[:,-1] = -basis[:,-1]
     return basis
 
-def construct_periodic_basis(curve):
+def construct_basis(curve, periodic=None):
+    t1 = curve.t[0]
+    t2 = curve.t[-1]
+    tan1 = curve(t1, 1)
+    tan2 = curve(t2, 1)
+    d = len(tan1)
+
+    if periodic is None:
+        periodic = np.allclose(tan1, tan2)
 
     def A(t):
         cur = curvature(curve, t)
@@ -64,34 +77,44 @@ def construct_periodic_basis(curve):
     def rhs(t,E):
         return A(t).dot(E)
 
-    t1 = curve.t[0]
-    t2 = curve.t[-1]
-    R0 = get_vec_basis(curve(t1, 1))
+    R0 = get_vec_basis(tan1)
     t, R = solve_ivp_mat(rhs, [t1, t2], R0, max_step=5e-3)
-    d = len(curve(t1, 1))
 
-    for i in range(len(R)):
-        tan = tangent(curve, t[i])
-        tmp = tan.T @ R[i]
-        assert np.allclose(tmp[1:], 0)
-        assert np.allclose(tmp[0], 1)
-        I = R[i] @ R[i].T
-        assert np.allclose(I, np.eye(d))
+    # be sure basis is valid
+    tmp = np.transpose(R, (0,2,1)) @ R
+    assert np.allclose(tmp, np.eye(d))
+    tan = tangent(curve, t)
+    tmp = tan[:,np.newaxis,:] @ R
+    assert np.allclose(tmp[:,:,1:], 0)
+    assert np.allclose(tmp[:,:,0], 1)
 
+    if periodic:
+        R = make_basis_periodic(t, R)
+        # be sure basis is periodic
+        assert np.allclose(R[0], R[-1])
+
+    # first column is the tangent vector, skip it
+    basis = R[:,:,1:]
+    return t, basis
+
+def make_basis_periodic(t, R):
+    t1 = t[0]
+    t2 = t[-1]
+    R0 = R[0]
+    Rn = R[-1]
+    log_RnR0 = logm(Rn.T.dot(R0))
+    tmp = (t - t1) / (t2 - t1)
+    tmp = tmp[:,np.newaxis,np.newaxis] * log_RnR0
+    D = np.array([expm(Si) for Si in tmp])
+    return R @ D
 
 def main():
     traj = np.load('data/traj.npy', allow_pickle=True).item()
     x = np.concatenate((traj['q'], traj['dq']), axis=1)
     t = traj['t']
     sp = make_interp_spline(t, x, k=5, bc_type='periodic')
-    construct_periodic_basis(sp)
-
-    # tt = np.linspace(-1, 10, 1000)
-    # plt.plot(tt, sp(tt))
-    # plt.show()
-
-    # make_interp_spline
-
+    t,E = construct_periodic_basis(sp)
+    E_sp = make_interp_spline(t, E, k=3, bc_type='periodic')
 
 if __name__ == '__main__':
     np.set_printoptions(suppress=True)

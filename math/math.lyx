@@ -291,11 +291,157 @@
 \end_layout
 
 \begin_layout Subsection
-Сложная динамика
+Динамика дрона в наклонёнными пропеллерами
 \end_layout
 
 \begin_layout Standard
-Динамика:
+Двигатели расположены в точках 
+\begin_inset Formula $a_{1},a_{2}$
+\end_inset
+
+ относительно дрона: 
+\begin_inset Formula $a_{1}=\left(-a_{x},a_{z}\right)$
+\end_inset
+
+, 
+\begin_inset Formula $a_{2}=\left(a_{x},a_{z}\right)$
+\end_inset
+
+.
+ Первый двигатель повёрнут на угол 
+\begin_inset Formula $-\epsilon$
+\end_inset
+
+, второй – на угол 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+.
+ Сила, создаваемая двигателями в СК дрона: 
+\begin_inset Formula 
+\begin{align*}
+f & =R_{-\epsilon}\mathbf{e}_{z}u_{1}+R_{\epsilon}\mathbf{e}_{z}u_{2}\\
+ & =\left(\begin{array}{c}
+\sin\epsilon\\
+\cos\epsilon
+\end{array}\right)u_{1}+\left(\begin{array}{c}
+-\sin\epsilon\\
+\cos\epsilon
+\end{array}\right)u_{2}
+\end{align*}
+
+\end_inset
+
+момент: 
+\begin_inset Formula 
+\begin{align*}
+t & =a_{1}\times f_{1}+a_{2}\times f_{2}\\
+ & =\left(-a_{x},a_{z}\right)\times\left(\begin{array}{c}
+\sin\epsilon\\
+\cos\epsilon
+\end{array}\right)u_{1}+\left(a_{x},a_{z}\right)\times\left(\begin{array}{c}
+-\sin\epsilon\\
+\cos\epsilon
+\end{array}\right)u_{2}\\
+ & =\left(-a_{x}\cos\epsilon-a_{z}\sin\epsilon\right)u_{1}+\left(a_{x}\cos\epsilon+a_{z}\sin\epsilon\right)u_{2}
+\end{align*}
+
+\end_inset
+
+Угол наклона двигателей 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ мал: 
+\begin_inset Formula 
+\begin{align*}
+f & =\left(\begin{array}{c}
+\epsilon\\
+1
+\end{array}\right)u_{1}+\left(\begin{array}{c}
+-\epsilon\\
+1
+\end{array}\right)u_{2}\\
+t & =\left(-a_{x}-a_{z}\epsilon\right)u_{1}+\left(a_{x}+a_{z}\epsilon\right)u_{2}
+\end{align*}
+
+\end_inset
+
+Вводим новые управления: 
+\begin_inset Formula $u:=u_{1}+u_{2}$
+\end_inset
+
+, 
+\begin_inset Formula $w:=u_{1}-u_{2}$
+\end_inset
+
+, получим 
+\begin_inset Formula 
+\begin{align*}
+f & =\left(\begin{array}{c}
+\epsilon w\\
+u
+\end{array}\right)\\
+t & =-\left(a_{x}+a_{z}\epsilon\right)w
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\ddot{p} & =\left(\begin{array}{c}
+0\\
+-g
+\end{array}\right)+\frac{1}{m}R_{\phi}\left(\begin{array}{c}
+\epsilon w\\
+u
+\end{array}\right)\\
+J\ddot{\phi} & =-\left(a_{x}+a_{z}\epsilon\right)w
+\end{align*}
+
+\end_inset
+
+При 
+\begin_inset Formula $g=1,m=1,J=-\left(a_{x}+a_{z}\epsilon\right)$
+\end_inset
+
+ получим
+\begin_inset Formula 
+\begin{align*}
+\ddot{x} & =\cos\phi\varepsilon w-\sin\phi u\\
+\ddot{z} & =-1+\sin\phi\varepsilon w+\cos\phi u\\
+\ddot{\phi} & =w
+\end{align*}
+
+\end_inset
+
+У них угол 
+\begin_inset Formula $\epsilon$
+\end_inset
+
+ отмеряется в противоположную сторону, поэтому динамика чуть отличается:
+\begin_inset Formula 
+\begin{align*}
+\ddot{x} & =-u\sin\phi-\varepsilon w\cos\phi\\
+\ddot{z} & =-1+u\cos\phi-\varepsilon w\sin\phi\\
+\ddot{\phi} & =w
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Редуцированная динамикаи
+\end_layout
+
+\begin_layout Standard
+Система 
 \begin_inset Formula 
 \begin{align*}
 \ddot{x} & =-u\sin\phi-\varepsilon w\cos\phi\\
@@ -396,98 +542,153 @@ Z\left(\theta\right)\\
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $Q=\left(\begin{array}{c}
+\begin_inset Formula 
+\begin{eqnarray*}
+Q & = & \left(\begin{array}{c}
 k_{1}\theta\\
 k_{2}\theta^{2}\\
 k_{3}+k_{4}\theta
+\end{array}\right)
+\end{eqnarray*}
+
+\end_inset
+
+Учитываю ограничения в точке
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+\alpha_{0} & =0\\
+0 & <\alpha_{0}'\\
+0 & <-\alpha_{0}^{'}-2\beta_{0}
+\end{align*}
+
+\end_inset
+
+и на интервале
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+0 & <\gamma_{\theta}\\
+0 & \leq\alpha_{\theta}\cdot\theta
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Смещённый центр масс
+\end_layout
+
+\begin_layout Standard
+Координаты центра масс в мировой СК 
+\begin_inset Formula 
+\[
+p_{c}=p_{b}+R_{\phi}a
+\]
+
+\end_inset
+
+где 
+\begin_inset Formula 
+\begin{align*}
+R_{\phi} & \equiv\left(\begin{array}{cc}
+\cos\phi & -\sin\phi\\
+\sin\phi & \cos\phi
+\end{array}\right)
+\end{align*}
+
+\end_inset
+
+дифференцируем координаты по времени
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\begin{align*}
+p_{b} & =p_{c}-R_{\phi}a\\
+\dot{p}_{b} & =\dot{p}_{c}-R_{\phi}^{'}\dot{\phi}a\\
+\ddot{p}_{b} & =\ddot{p}_{c}-R_{\phi}^{''}\dot{\phi}^{2}a-R_{\phi}^{'}\ddot{\phi}a
+\end{align*}
+
+\end_inset
+
+подставляем 
+\begin_inset Formula 
+\begin{align*}
+R_{\phi}^{'} & =JR_{\phi}\\
+R_{\phi}^{''} & =-R_{\phi}\\
+J & \equiv\left(\begin{array}{cc}
+0 & -1\\
+1 & 0
+\end{array}\right)
+\end{align*}
+
+\end_inset
+
+получим 
+\begin_inset Formula 
+\[
+\ddot{p}_{b}=\left(\begin{array}{c}
+-u\sin\phi-\varepsilon w\cos\phi\\
+-1+u\cos\phi-\varepsilon w\sin\phi
+\end{array}\right)+\left(R_{\phi}a\right)\dot{\phi}^{2}-\left(JR_{\phi}a\right)w
+\]
+
+\end_inset
+
+Можно вектор 
+\begin_inset Formula $a$
+\end_inset
+
+ представить как 
+\begin_inset Formula $a=R_{\alpha}\mathbf{e}_{x}c$
+\end_inset
+
+, тогда 
+\begin_inset Formula 
+\begin{align*}
+R_{\phi}a & =R_{\phi}R_{\alpha}\mathbf{e}_{x}c\\
+ & =\left(\cos\phi+\alpha,\sin\phi+\alpha\right)c
+\end{align*}
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\ddot{p}_{b}=\left(\begin{array}{c}
+\cos\left(\phi+\alpha\right)c\dot{\phi}^{2}-u\sin\phi-\varepsilon w\cos\phi+\sin\left(\phi+\alpha\right)cw\\
+-1+\sin\left(\phi+\alpha\right)c\dot{\phi}^{2}+u\cos\phi-\varepsilon w\sin\phi-\cos\left(\phi+\alpha\right)cw
+\end{array}\right)
+\]
+
+\end_inset
+
+тогда 
+\begin_inset Formula $\ddot{q}=\left(\begin{array}{c}
+\cos\left(\phi+\alpha\right)c\dot{\phi}^{2}\\
+-1+\sin\left(\phi+\alpha\right)c\dot{\phi}^{2}\\
+0
+\end{array}\right)+\left(\begin{array}{cc}
+-\sin\phi & -\varepsilon\cos\phi+\sin\left(\phi+\alpha\right)c\\
+\cos\phi & -\varepsilon\sin\phi-\cos\left(\phi+\alpha\right)c\\
+c\cos\left(\alpha-\phi\right) & 1+c\sin\left(\alpha-\phi\right)\varepsilon
+\end{array}\right)\cdot\left(\begin{array}{c}
+u\\
+w
 \end{array}\right)$
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-—
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $g_{\perp}Q'=\cos\phi X'+\sin\phi Z'+\epsilon\Phi'$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-—
-\end_layout
-
-\begin_layout Standard
-constraints:
-\end_layout
-
-\begin_layout Standard
-at zero:
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $\alpha_{0}=0$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $0<\alpha_{0}'$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $0<-\alpha_{0}^{'}-2\beta_{0}$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-—
-\end_layout
-
-\begin_layout Standard
-on interval
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $0<\gamma_{\theta}$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $0\leq\alpha_{\theta}\cdot\theta$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-—
 \end_layout
 
 \begin_layout Section
@@ -528,47 +729,7 @@ x & =\alpha\left(\xi,\tau\right)\\
 \begin_layout Standard
 \begin_inset Formula 
 \begin{align*}
-A_{\tau}^{\xi} & :=E_{\tau}^{T}\left(\frac{\partial f\left(x\right)+g\left(x\right)u_{\tau}}{\partial x}\right)_{x=x_{\tau},u=u_{\tau}}E_{\tau}\\
-B_{\tau}^{\xi} & :=E_{\tau}^{T}g\left(x_{\tau}\right)
-\end{align*}
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\begin{align*}
-A_{\tau}^{x} & \equiv\left(\frac{\partial f\left(x,u\right)}{\partial x}\right)_{x=x_{\tau},u=u_{\tau}}E_{\tau}\\
+A_{\tau}^{x} & \equiv\left(\frac{\partial f\left(x,u\right)}{\partial x}\right)_{x=x_{\tau},u=u_{\tau}}\left(\frac{\partial\alpha\left(\xi,\tau\right)}{\partial\xi}\right)_{\xi=0}\\
 B_{\tau}^{x} & \equiv\left(\frac{\partial f\left(x,u\right)}{\partial u}\right)_{x=x_{\tau},u=u_{\tau}}
 \end{align*}
 
@@ -580,80 +741,32 @@ B_{\tau}^{x} & \equiv\left(\frac{\partial f\left(x,u\right)}{\partial u}\right)_
 \begin_layout Standard
 \begin_inset Formula 
 \begin{align*}
-Z_{\tau} & \equiv\frac{x_{\tau}^{'}\cdot\left(\frac{\partial f\left(x,u\right)}{\partial x}\right)_{x=x_{\tau},u=u_{\tau}}E_{\tau}}{x_{\tau}^{'}\cdot x_{\tau}^{'}}-\frac{x_{\tau}^{'}\cdot E_{\tau}^{'}}{x_{\tau}^{'}\cdot x_{\tau}^{'}}\\
-R_{\tau} & \equiv\frac{x_{\tau}^{'}\cdot g\left(x_{\tau}\right)}{x_{\tau}^{'}\cdot x_{\tau}^{'}}
+A_{\tau}^{x} & =\left(\frac{\partial f}{\partial x}\right)_{x=x_{\tau}}E_{\tau}\\
+B_{\tau}^{x} & =g_{x_{\tau}}
 \end{align*}
 
 \end_inset
 
-
+Далее
 \end_layout
 
 \begin_layout Standard
 \begin_inset Formula 
 \begin{align*}
-J & :=E_{\tau}\\
-n & =x_{\tau}^{'}
+A_{\tau}^{\xi} & :=\left[\frac{\partial\left(\nabla_{x_{\tau}^{'}}\beta+\partial_{\tau}\beta\right)}{\partial x}\left(\frac{\partial\alpha}{\partial\xi}\right)_{\xi=0}+\frac{\partial\beta\left(x,\tau\right)}{\partial x}A_{\tau}^{x}+\frac{\partial\beta\left(x,\tau\right)}{\partial\tau}Z_{\tau}\right]_{x=x_{\tau}}\\
+B_{\tau}^{\xi} & :=\left[\frac{\partial\beta\left(x,\tau\right)}{\partial x}B_{\tau}^{x}+\frac{\partial\beta\left(x,\tau\right)}{\partial\tau}R_{\tau}\right]_{x=x_{\tau}}
 \end{align*}
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
+Вычислим 
 \begin_inset Formula 
 \begin{align*}
-A_{\tau}^{\xi} & :=\left[\frac{\partial\beta\left(x,\tau\right)}{\partial x}A_{\tau}^{x}+\frac{dE_{\tau}^{T}}{d\tau}\cdot\left(x-x_{\tau}\right)Z_{\tau}\right]_{x=x_{\tau}}\\
-B_{\tau}^{\xi} & :=E_{\tau}^{T}g\left(x_{\tau}\right)
+\nabla_{x_{\tau}^{'}}\beta+\partial_{\tau}\beta & =\frac{\partial\beta}{\partial x}x_{\tau}^{'}+\frac{\partial\beta}{\partial\tau}\\
+ & =\frac{dE_{\tau}^{T}}{d\tau}\cdot\left(x-x_{\tau}\right)\\
+\frac{\partial\left(\nabla_{x_{\tau}^{'}}\beta+\partial_{\tau}\beta\right)}{\partial x} & =
 \end{align*}
 
-\end_inset
-
-поскольку
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula 
-\[
-x_{\tau}^{'}\cdot E_{\tau}=0
-\]
-
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset Formula $\frac{\partial\beta}{\partial\tau}=E_{\tau}^{T}\cdot\left(x-x_{\tau}\right)=\frac{dE_{\tau}^{T}}{d\tau}\cdot\left(x-x_{\tau}\right)$
-\end_inset
-
-
-\end_layout
-
-\begin_layout Standard
-\begin_inset space ~
 \end_inset
 
 
@@ -667,7 +780,63 @@ x_{\tau}^{'}\cdot E_{\tau}=0
 \end_layout
 
 \begin_layout Standard
-\begin_inset Formula $\frac{\partial\beta\left(x,\tau\right)}{\partial x}x_{\tau}^{'}$
+\begin_inset Formula $\partial_{x}\beta=E_{\tau}^{T}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\partial_{\tau}\beta=\frac{dE_{\tau}^{T}}{d\tau}\cdot\left(x-x_{\tau}\right)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\alpha\left(\xi,\tau\right)=x_{\tau}+E_{\tau}\xi$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\frac{\partial\alpha}{\partial\xi}=E_{\tau}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\frac{\partial\alpha}{\partial\tau}=x_{\tau}^{'}+\frac{dE_{\tau}}{d\tau}\xi$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset space ~
 \end_inset
 
 

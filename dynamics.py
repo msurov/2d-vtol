@@ -1,5 +1,6 @@
 from dataclasses import dataclass
-from casadi import SX, MX, vertcat, horzcat, sin, cos, Function, pinv
+from casadi import SX, MX, vertcat, horzcat, sin, cos, Function, pinv, cross
+import numpy as np
 
 mm = MX
 
@@ -10,13 +11,15 @@ class Parameters:
     '''
     epsilon : float # engines dihedral angle
     gravity : float # gravity acceleration
+    mass_center : np.array # coordinates of mass center
 
 '''
     Default parameters
 '''
 parameters = Parameters(
-    epsilon=0.2,
-    gravity=1.0
+    epsilon = 0.2,
+    gravity = 1.0,
+    mass_center = [-0.3, 0.1]
 )
 
 class Dynamics:
@@ -32,31 +35,35 @@ class Dynamics:
         # parameters
         epsilon = parameters.epsilon
         gravity = parameters.gravity
+        cx, cy = parameters.mass_center
+        c = np.sqrt(cx**2 + cy**2)
+        alpha = np.arctan2(cy, cx)
 
         # phase coordinates
         q = mm.sym('q', 3)
         dq = mm.sym('dq', 3)
         u = mm.sym('u', 2)
         phi = q[2]
+        dphi = dq[2]
 
         M = mm.eye(3)
         C = mm.zeros(3,3)
+        C[0,2] = -cos(phi + alpha) * c * dphi
+        C[1,2] = -sin(phi + alpha) * c * dphi
         G = mm.zeros(3)
         G[1] = gravity
         b1 = vertcat(
             -sin(phi),
             cos(phi),
-            0
+            c*cos(alpha - phi)
         )
         b2 = vertcat(
             -epsilon*cos(phi),
             -epsilon*sin(phi),
-            1
+            1 + c * epsilon * sin(alpha - phi)
         )
         B = horzcat(b1, b2)
-        B_perp = horzcat(
-            cos(phi), sin(phi), epsilon
-        )
+        B_perp = cross(b1, b2).T
 
         self.nq = 3
         self.nu = 2

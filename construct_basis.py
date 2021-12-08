@@ -85,11 +85,11 @@ def construct_basis(t, x, periodic=None):
 
     # be sure basis is valid
     tmp = np.transpose(R, (0,2,1)) @ R
-    assert np.allclose(tmp, np.eye(d), atol=1e-6)
+    assert np.allclose(tmp, np.eye(d), atol=1e-5)
     tan = tangent(curve, t)
     tmp = tan[:,np.newaxis,:] @ R
-    assert np.allclose(tmp[:,:,1:], 0, atol=1e-6)
-    assert np.allclose(tmp[:,:,0], 1, atol=1e-6)
+    assert np.allclose(tmp[:,:,1:], 0, atol=1e-5)
+    assert np.allclose(tmp[:,:,0], 1, atol=1e-5)
 
     if periodic:
         R = make_basis_periodic(t, R)

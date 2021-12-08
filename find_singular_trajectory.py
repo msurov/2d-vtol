@@ -345,7 +345,7 @@ def test_trajectory(dynamics : Dynamics, trajectory : dict):
         'q': x[:,0:3],
         'dq': x[:,3:6],
     }
-    plt.figure('Compare trajectories')
+    plt.figure('Compare trajectories', figsize=(12,8))
     plot_trajectory(traj, ls='--')
     plot_trajectory(traj1)
     plt.tight_layout()

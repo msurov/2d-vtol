@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.interpolate import make_interp_spline, splrep
-from dynamics import Dynamics, get_inv_dynamics
+from dynamics import Dynamics, get_inv_dynamics, parameters
 
 
 class ServoConnectionParametrized:
@@ -233,12 +233,16 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
 
     return traj
 
-def plot_trajectory(traj):
+def plot_trajectory(traj, ls='-'):
     x,z,phi = traj['q'].T
     dx,dz,dphi = traj['dq'].T
     t = traj['t']
-    u1,u2 = traj['u'].T
     period = t[-1]
+
+    if 'u' in traj:
+        u1,u2 = traj['u'].T
+    else:
+        u1 = u2 = None
 
     if 'q_s' in traj:
         qs = traj['q_s']
@@ -250,7 +254,7 @@ def plot_trajectory(traj):
 
     plt.figure('Phase Trajectory Projections')
     ax = plt.subplot(231)
-    plt.plot(x, dx)
+    plt.plot(x, dx, ls=ls)
     if qs is not None:
         plt.plot(qs[0], dqs[0], 'o', color='green')
         plt.plot(qs[0], -dqs[0], 'o', color='green')
@@ -259,7 +263,7 @@ def plot_trajectory(traj):
     plt.grid(True)
 
     ax = plt.subplot(232)
-    plt.plot(z, dz)
+    plt.plot(z, dz, ls=ls)
     if qs is not None:
         plt.plot(qs[1], dqs[1], 'o', color='green')
         plt.plot(qs[1], -dqs[1], 'o', color='green')
@@ -268,7 +272,7 @@ def plot_trajectory(traj):
     plt.grid(True)
 
     ax = plt.subplot(233)
-    plt.plot(phi, dphi)
+    plt.plot(phi, dphi, ls=ls)
     if qs is not None:
         plt.plot(qs[2], dqs[2], 'o', color='green')
         plt.plot(qs[2], -dqs[2], 'o', color='green')
@@ -277,8 +281,8 @@ def plot_trajectory(traj):
     plt.grid(True)
 
     ax = plt.subplot(234)
-    plt.plot(x, z, label=R'$z$')
-    plt.plot(x, phi, label=R'$\phi$')
+    plt.plot(x, z, label=R'$z$', ls=ls)
+    plt.plot(x, phi, label=R'$\phi$', ls=ls)
     if qs is not None:
         plt.plot(qs[0], qs[1], 'o', color='green')
         plt.plot(qs[0], qs[2], 'o', color='green')
@@ -286,16 +290,17 @@ def plot_trajectory(traj):
     plt.legend()
     plt.grid(True)
 
-    ax = plt.subplot(235)
-    plt.plot(t, u1, label=R'$u_1$')
-    plt.plot(t, u2, label=R'$u_2$')
-    if qs is not None:
-        plt.plot([ts, period-ts], [us[0], us[0]], 'o', color='green')
-        plt.plot([ts, period-ts], [us[1], us[1]], 'o', color='green')
-    plt.xlabel(R'$t$')
-    plt.ylabel(R'$u$')
-    plt.legend()
-    plt.grid(True)
+    if u1 is not None:
+        ax = plt.subplot(235)
+        plt.plot(t, u1, label=R'$u_1$', ls=ls)
+        plt.plot(t, u2, label=R'$u_2$', ls=ls)
+        if qs is not None:
+            plt.plot([ts, period-ts], [us[0], us[0]], 'o', color='green')
+            plt.plot([ts, period-ts], [us[1], us[1]], 'o', color='green')
+        plt.xlabel(R'$t$')
+        plt.ylabel(R'$u$')
+        plt.legend()
+        plt.grid(True)
 
     plt.tight_layout()
 
@@ -305,6 +310,35 @@ def save_trajectory(dstfile, traj):
 def load_trajectory(trajfile):
     traj = np.load(trajfile, allow_pickle=True).item()
     return traj
+
+def test_trajectory(dynamics : Dynamics, trajectory : dict):
+    f = dynamics.rhs
+    t = trajectory['t']
+    q = trajectory['q']
+    dq = trajectory['dq']
+    u = trajectory['u']
+    usp = make_interp_spline(t, u)
+    x = np.concatenate((q, dq), axis=1)
+
+    def rhs(t, x):
+        q = x[0:3]
+        dq = x[3:6]
+        u = usp(t)
+        ans = f(q,dq,u)
+        return np.reshape(ans, (-1,))
+
+    sol = solve_ivp(rhs, [t[0], t[-1]], x[0,:], t_eval=t)
+    t = sol['t']
+    x = sol['y'].T
+    traj1 = {
+        't': t,
+        'q': x[:,0:3],
+        'dq': x[:,3:6],
+    }
+    plot_trajectory(traj, ls='--')
+    plot_trajectory(traj1)
+    plt.show()
+
 
 def main(dynamics, dstfile):
     c = ServoConnectionParametrized()
@@ -319,5 +353,10 @@ def main(dynamics, dstfile):
     plot_trajectory(traj)
     save_trajectory(dstfile, traj)
 
+
 if __name__ == '__main__':
-    main()
+    trajfile = 'data/traj.npy'
+    dynamics = Dynamics(parameters)
+    main(dynamics, trajfile)
+    traj = load_trajectory(trajfile)
+    test_trajectory(dynamics, traj)

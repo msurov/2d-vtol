@@ -34,6 +34,7 @@ class Dynamics:
         # phase coordinates
         q = SX.sym('q', 3)
         dq = SX.sym('dq', 3)
+        u = SX.sym('u', 2)
         phi = q[2]
 
         M = SX.eye(3)
@@ -55,6 +56,9 @@ class Dynamics:
             cos(phi), sin(phi), epsilon
         )
 
+        self.nq = 3
+        self.nu = 2
+        self.u = u
         self.q = q
         self.dq = dq
         self.M = Function('M', [q], [M])
@@ -62,9 +66,16 @@ class Dynamics:
         self.G = Function('G', [q], [G])
         self.B = Function('B', [q], [B])
         self.B_perp = Function('B_perp', [q], [B_perp])
+        self.rhs = Function('rhs', [q,dq,u], [vertcat(dq, pinv(M) @ (-C @ dq - G + B @ u))])
 
 
 def get_inv_dynamics(dynamics):
+    R'''
+        returns expression for 
+            \[
+                u = u(q,\dot{q},\ddot{q})
+            \]
+    '''
     q = dynamics.q
     dq = dynamics.dq
     ddq = SX.sym('ddq', *q.shape)

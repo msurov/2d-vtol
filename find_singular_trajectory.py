@@ -1,5 +1,5 @@
-from casadi import SX, DM, vertcat, horzcat, sin, cos, \
-    simplify, substitute, pi, jacobian, nlpsol, Function, pinv
+from casadi import MX, DM, vertcat, horzcat, sin, cos, \
+    simplify, substitute, pi, jacobian, nlpsol, Function, pinv, evalf
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
@@ -9,8 +9,8 @@ from dynamics import Dynamics, get_inv_dynamics, parameters
 
 class ServoConnectionParametrized:
     def __init__(self):
-        k = SX.sym('k', 4) # parameters of the servo-connection
-        theta = SX.sym('theta')
+        k = MX.sym('k', 4) # parameters of the servo-connection
+        theta = MX.sym('theta')
         Q = vertcat(
             theta,
             k[0] * theta**2,
@@ -23,7 +23,7 @@ class ServoConnectionParametrized:
         self.Q = Function('Q', [theta], [Q])
     
     def subs(self, parameters):
-        arg = SX.sym('dummy')
+        arg = MX.sym('dummy')
         Q = substitute(self.Q(arg), self.parameters, parameters)
         return Function('Q', [arg], [Q])
     
@@ -32,7 +32,7 @@ class ServoConnectionParametrized:
 
 class ReducedDynamics:
     def __init__(self, dynamics, connection):
-        theta = SX.sym('theta')
+        theta = MX.sym('theta')
         Q = connection(theta)
         dQ = jacobian(Q, theta)
         ddQ = jacobian(dQ, theta)
@@ -53,7 +53,7 @@ def find_singular_connection(theta_s, theta_l, theta_r, dynamics, parametrized_c
     '''
     rd = ReducedDynamics(dynamics, parametrized_connection)
 
-    theta_s = SX(theta_s)
+    theta_s = MX(theta_s)
     d_alpha = rd.alpha.jac()
     d_alpha_s = d_alpha(theta_s, 0)
     alpha_s = rd.alpha(theta_s)
@@ -74,7 +74,7 @@ def find_singular_connection(theta_s, theta_l, theta_r, dynamics, parametrized_c
         np.linspace(float(theta_s), theta_r, npts)[1:]
     ))
     for p in pts:
-        p = SX(p)
+        p = MX(p)
         constraints += [
             rd.gamma(p) - 1e-3,
             rd.alpha(p) * p - 1e-3
@@ -113,6 +113,9 @@ def plot_reduced_trajectory(reduced_trajectory):
         if 'dtheta_s' in reduced_trajectory:
             dtheta_s = reduced_trajectory['dtheta_s']
             plt.plot([theta_s, theta_s], [dtheta_s, -dtheta_s], 'o')
+    
+    plt.xlabel(R'$\theta$')
+    plt.ylabel(R'$\dot{\theta}$')
     plt.grid(True)
     
 def solve_singular(rd, theta_s, theta_l, theta_r):
@@ -123,8 +126,8 @@ def solve_singular(rd, theta_s, theta_l, theta_r):
         `theta_l` is the starting point of the trajectory
         `theta_r` is the final point of the trajectory
     '''
-    theta = SX.sym('theta')
-    y = SX.sym('y')
+    theta = MX.sym('theta')
+    y = MX.sym('y')
     alpha = rd.alpha(theta)
     beta = rd.beta(theta)
     gamma = rd.gamma(theta)
@@ -139,14 +142,14 @@ def solve_singular(rd, theta_s, theta_l, theta_r):
     dtheta_s = np.sqrt(2 * y_s)
     rhs_s = jacobian(-gamma/(2*beta), theta)
     dy_s = substitute(rhs_s, theta, theta_s)
-    ddtheta_s = float(dy_s)
+    ddtheta_s = float(evalf(dy_s))
 
     # concatenate left and right parts
     i = len(sol_left['t'])
     theta = np.concatenate((sol_left['t'], [theta_s], sol_right['t'][::-1]))
     y = np.concatenate((sol_left['y'][0], [y_s], sol_right['y'][0,::-1]))
     dy = rhs(theta, y)
-    dy[i] = float(dy_s)
+    dy[i] = float(evalf(dy_s))
 
     # find time
     dtheta = np.sqrt(2 * y)
@@ -186,9 +189,9 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
         Get phase trajectory and reference control corresponding the 
         trajectory `reduced_trajectory` of the reduced dynamics
     '''
-    theta = SX.sym('theta')
-    dtheta = SX.sym('dtheta')
-    ddtheta = SX.sym('ddtheta')
+    theta = MX.sym('theta')
+    dtheta = MX.sym('dtheta')
+    ddtheta = MX.sym('ddtheta')
     Q = constraint(theta)
     dQ = jacobian(Q, theta)
     ddQ = jacobian(dQ, theta)
@@ -204,11 +207,13 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
 
     u_fun = get_inv_dynamics(dynamics)
     u = u_fun(q, dq, ddq)
+    x = np.concatenate([np.array(q).T, np.array(dq).T], axis=1)
 
     traj = {
         't': reduced_trajectory['t'],
-        'q': np.array(q).T,
-        'dq': np.array(dq).T,
+        'x': x,
+        'q': x[:,0:3],
+        'dq': x[:,3:6],
         'ddq': np.array(ddq).T,
         'u': np.array(u).T,
     }
@@ -233,7 +238,7 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
 
     return traj
 
-def plot_trajectory(traj, ls='-'):
+def plot_trajectory(traj, **kwargs):
     x,z,phi = traj['q'].T
     dx,dz,dphi = traj['dq'].T
     t = traj['t']
@@ -252,9 +257,8 @@ def plot_trajectory(traj, ls='-'):
     else:
         qs = dqs = us = ts = None
 
-    plt.figure('Phase Trajectory Projections')
     ax = plt.subplot(231)
-    plt.plot(x, dx, ls=ls)
+    plt.plot(x, dx, **kwargs)
     if qs is not None:
         plt.plot(qs[0], dqs[0], 'o', color='green')
         plt.plot(qs[0], -dqs[0], 'o', color='green')
@@ -263,7 +267,7 @@ def plot_trajectory(traj, ls='-'):
     plt.grid(True)
 
     ax = plt.subplot(232)
-    plt.plot(z, dz, ls=ls)
+    plt.plot(z, dz, **kwargs)
     if qs is not None:
         plt.plot(qs[1], dqs[1], 'o', color='green')
         plt.plot(qs[1], -dqs[1], 'o', color='green')
@@ -272,7 +276,7 @@ def plot_trajectory(traj, ls='-'):
     plt.grid(True)
 
     ax = plt.subplot(233)
-    plt.plot(phi, dphi, ls=ls)
+    plt.plot(phi, dphi, **kwargs)
     if qs is not None:
         plt.plot(qs[2], dqs[2], 'o', color='green')
         plt.plot(qs[2], -dqs[2], 'o', color='green')
@@ -281,19 +285,25 @@ def plot_trajectory(traj, ls='-'):
     plt.grid(True)
 
     ax = plt.subplot(234)
-    plt.plot(x, z, label=R'$z$', ls=ls)
-    plt.plot(x, phi, label=R'$\phi$', ls=ls)
+    plt.plot(x, z, **kwargs)
     if qs is not None:
         plt.plot(qs[0], qs[1], 'o', color='green')
+    plt.xlabel(R'$x$')
+    plt.ylabel(R'$z$')
+    plt.grid(True)
+
+    ax = plt.subplot(235)
+    plt.plot(x, phi, **kwargs)
+    if qs is not None:
         plt.plot(qs[0], qs[2], 'o', color='green')
     plt.xlabel(R'$x$')
-    plt.legend()
+    plt.ylabel(R'$\phi$')
     plt.grid(True)
 
     if u1 is not None:
-        ax = plt.subplot(235)
-        plt.plot(t, u1, label=R'$u_1$', ls=ls)
-        plt.plot(t, u2, label=R'$u_2$', ls=ls)
+        ax = plt.subplot(236)
+        plt.plot(t, u1, label=R'$u_1$', **kwargs)
+        plt.plot(t, u2, label=R'$u_2$', **kwargs)
         if qs is not None:
             plt.plot([ts, period-ts], [us[0], us[0]], 'o', color='green')
             plt.plot([ts, period-ts], [us[1], us[1]], 'o', color='green')
@@ -335,9 +345,10 @@ def test_trajectory(dynamics : Dynamics, trajectory : dict):
         'q': x[:,0:3],
         'dq': x[:,3:6],
     }
+    plt.figure('Compare trajectories')
     plot_trajectory(traj, ls='--')
     plot_trajectory(traj1)
-    plt.show()
+    plt.tight_layout()
 
 
 def main(dynamics, dstfile):
@@ -348,9 +359,11 @@ def main(dynamics, dstfile):
     Q = find_singular_connection(theta_s, theta_l, theta_r, dynamics, c)
     rd = ReducedDynamics(dynamics, Q)
     rd_traj = solve_singular(rd, theta_s, theta_l, theta_r)
+
     plot_reduced_trajectory(rd_traj)
+    plt.tight_layout()
+
     traj = get_trajectory(dynamics, Q, rd_traj)
-    plot_trajectory(traj)
     save_trajectory(dstfile, traj)
 
 
@@ -358,5 +371,7 @@ if __name__ == '__main__':
     trajfile = 'data/traj.npy'
     dynamics = Dynamics(parameters)
     main(dynamics, trajfile)
+
     traj = load_trajectory(trajfile)
     test_trajectory(dynamics, traj)
+    plt.show()

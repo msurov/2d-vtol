@@ -54,19 +54,22 @@ def get_vec_basis(v):
     U,l,Vt = np.linalg.svd(v.T)
     d = len(v)
     basis = Vt
+    if v[:,0].T @ basis[:,0] < 0:
+        basis = -basis
     if np.linalg.det(basis) < 0:
         basis[:,-1] = -basis[:,-1]
     return basis
 
-def construct_basis(curve, periodic=None):
-    t1 = curve.t[0]
-    t2 = curve.t[-1]
+def construct_basis(t, x, periodic=None):
+    if periodic is None:
+        periodic = np.allclose(x[0], x[-1])
+    
+    curve = make_interp_spline(t, x, k=3, bc_type='periodic' if periodic else None)
+    t1 = t[0]
+    t2 = t[-1]
     tan1 = curve(t1, 1)
     tan2 = curve(t2, 1)
     d = len(tan1)
-
-    if periodic is None:
-        periodic = np.allclose(tan1, tan2)
 
     def A(t):
         cur = curvature(curve, t)
@@ -78,20 +81,21 @@ def construct_basis(curve, periodic=None):
         return A(t).dot(E)
 
     R0 = get_vec_basis(tan1)
-    t, R = solve_ivp_mat(rhs, [t1, t2], R0, max_step=5e-3)
+    t, R = solve_ivp_mat(rhs, [t1, t2], R0, max_step=1e-3, t_eval=t)
 
     # be sure basis is valid
     tmp = np.transpose(R, (0,2,1)) @ R
-    assert np.allclose(tmp, np.eye(d))
+    assert np.allclose(tmp, np.eye(d), atol=1e-6)
     tan = tangent(curve, t)
     tmp = tan[:,np.newaxis,:] @ R
-    assert np.allclose(tmp[:,:,1:], 0)
-    assert np.allclose(tmp[:,:,0], 1)
+    assert np.allclose(tmp[:,:,1:], 0, atol=1e-6)
+    assert np.allclose(tmp[:,:,0], 1, atol=1e-6)
 
     if periodic:
         R = make_basis_periodic(t, R)
         # be sure basis is periodic
         assert np.allclose(R[0], R[-1])
+        R[-1] = R[0]
 
     # first column is the tangent vector, skip it
     basis = R[:,:,1:]
@@ -112,8 +116,7 @@ def main():
     traj = np.load('data/traj.npy', allow_pickle=True).item()
     x = np.concatenate((traj['q'], traj['dq']), axis=1)
     t = traj['t']
-    sp = make_interp_spline(t, x, k=5, bc_type='periodic')
-    t,E = construct_periodic_basis(sp)
+    t,E = construct_basis(t, x)
     E_sp = make_interp_spline(t, E, k=3, bc_type='periodic')
 
 if __name__ == '__main__':

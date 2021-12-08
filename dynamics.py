@@ -1,5 +1,7 @@
 from dataclasses import dataclass
-from casadi import SX, vertcat, horzcat, sin, cos, Function, pinv
+from casadi import SX, MX, vertcat, horzcat, sin, cos, Function, pinv
+
+mm = MX
 
 @dataclass
 class Parameters:
@@ -32,14 +34,14 @@ class Dynamics:
         gravity = parameters.gravity
 
         # phase coordinates
-        q = SX.sym('q', 3)
-        dq = SX.sym('dq', 3)
-        u = SX.sym('u', 2)
+        q = mm.sym('q', 3)
+        dq = mm.sym('dq', 3)
+        u = mm.sym('u', 2)
         phi = q[2]
 
-        M = SX.eye(3)
-        C = SX.zeros(3,3)
-        G = SX.zeros(3)
+        M = mm.eye(3)
+        C = mm.zeros(3,3)
+        G = mm.zeros(3)
         G[1] = gravity
         b1 = vertcat(
             -sin(phi),
@@ -78,7 +80,7 @@ def get_inv_dynamics(dynamics):
     '''
     q = dynamics.q
     dq = dynamics.dq
-    ddq = SX.sym('ddq', *q.shape)
+    ddq = mm.sym('ddq', *q.shape)
     lhs = dynamics.M(q) @ ddq + dynamics.C(q, dq) @ dq + dynamics.G(q)
     u = pinv(dynamics.B(q)) @ lhs
     return Function('u', [q,dq,ddq], [u])

@@ -1,13 +1,14 @@
 import numpy as np
-import find_singular_trajectory
-import transverse_linearization
 import matplotlib.pyplot as plt
+
+import transverse_linearization
+import construct_singular_trajectory
+import linsys_feedback
 from dynamics import Dynamics, parameters, get_inv_dynamics
 from lqr import lqr_ltv
-import linsys_feedback
 from transverse_feedback import TransversePeriodicFeedback
 from simulator import Simulator
-from find_singular_trajectory import plot_trajectory
+from plots import plot_trajectory
 
 
 def run_simulation(dynamics, trajectory, feedback):
@@ -34,11 +35,12 @@ def run_simulation(dynamics, trajectory, feedback):
         'x': x,
         'u': u
     }
-    plt.figure('Simulation results', figsize=(12, 8))
+    plt.figure('Simulation results', figsize=(16, 8))
     plot_trajectory(trajectory, ls='--', lw=2)
     plot_trajectory(real_traj, alpha=0.5)
+    plt.tight_layout()
 
-    plt.figure('Transverse coordinates', figsize=(12, 8))
+    plt.figure('Transverse coordinates', figsize=(16, 8))
 
     plt.subplot(121)
     plt.plot(t, xi)
@@ -57,11 +59,11 @@ def main():
 
     dynamics = Dynamics(parameters)
 
-    # find_singular_trajectory.main(dynamics, trajfile)
-    traj = find_singular_trajectory.load_trajectory(trajfile)
-    # transverse_linearization.main(dynamics, traj, linsysfile)
+    construct_singular_trajectory.main(dynamics, trajfile)
+    traj = construct_singular_trajectory.load_trajectory(trajfile)
+    transverse_linearization.main(dynamics, traj, linsysfile)
     linsys = transverse_linearization.load_linsys(linsysfile)
-    # linsys_feedback.main(traj, linsys, feedbackfile)
+    linsys_feedback.main(traj, linsys, feedbackfile)
     fb = linsys_feedback.load_feedback(feedbackfile)
     tfb = TransversePeriodicFeedback(traj, fb, linsys)
 

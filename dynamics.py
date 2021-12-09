@@ -15,7 +15,7 @@ class Parameters:
     Default parameters
 '''
 parameters = Parameters(
-    epsilon = 0.2,
+    epsilon = 0.0,
     gravity = 1.0
 )
 

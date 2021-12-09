@@ -1,7 +1,6 @@
 from casadi import MX, DM, vertcat, horzcat, sin, cos, \
     simplify, substitute, pi, jacobian, nlpsol, Function, pinv, evalf
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 from scipy.interpolate import make_interp_spline, splrep
 from dynamics import Dynamics, get_inv_dynamics, parameters
@@ -98,26 +97,7 @@ def find_singular_connection(theta_s, theta_l, theta_r, dynamics, parametrized_c
     k_found = sol['x']
     return parametrized_connection.subs(k_found)
 
-def plot_reduced_trajectory(reduced_trajectory):
-    '''
-        @brief Plot a given phase trajectory of reduced dynamics
-    '''
-    plt.figure('Reduced Dynamics Trajectory')
-    theta = reduced_trajectory['theta']
-    dtheta = reduced_trajectory['dtheta']
-    plt.plot(theta, dtheta, color='blue')
 
-    if 'theta_s' in reduced_trajectory:
-        theta_s = reduced_trajectory['theta_s']
-        plt.axvline(theta_s, ls='--', color='green')
-        if 'dtheta_s' in reduced_trajectory:
-            dtheta_s = reduced_trajectory['dtheta_s']
-            plt.plot([theta_s, theta_s], [dtheta_s, -dtheta_s], 'o')
-    
-    plt.xlabel(R'$\theta$')
-    plt.ylabel(R'$\dot{\theta}$')
-    plt.grid(True)
-    
 def solve_singular(rd, theta_s, theta0):
     '''
         @brief Find trajectory of reduced singular dynamics
@@ -227,10 +207,6 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
         'u': np.array(u).T,
     }
 
-    t = reduced_trajectory['t']
-    # ts = reduced_trajectory['t_s']
-    # i = np.argmin((t - ts)**2)
-
     if 'theta_s' in reduced_trajectory:
         theta_s = reduced_trajectory['theta_s']
         dtheta_s = reduced_trajectory['dtheta_s']
@@ -247,118 +223,12 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
 
     return traj
 
-def plot_trajectory(traj, **kwargs):
-    x,z,phi = traj['q'].T
-    dx,dz,dphi = traj['dq'].T
-    t = traj['t']
-    period = t[-1]
-
-    if 'u' in traj:
-        u1,u2 = traj['u'].T
-    else:
-        u1 = u2 = None
-
-    if 'q_s' in traj:
-        qs = traj['q_s']
-        dqs = traj['dq_s']
-        us = traj['u_s']
-        ts = traj['t_s']
-    else:
-        qs = dqs = us = ts = None
-
-    ax = plt.subplot(231)
-    plt.plot(x, dx, **kwargs)
-    if qs is not None:
-        plt.plot(qs[0], dqs[0], 'o', color='green')
-        plt.plot(qs[0], -dqs[0], 'o', color='green')
-    plt.xlabel(R'$x$')
-    plt.ylabel(R'$\dot{x}$')
-    plt.grid(True)
-
-    ax = plt.subplot(232)
-    plt.plot(z, dz, **kwargs)
-    if qs is not None:
-        plt.plot(qs[1], dqs[1], 'o', color='green')
-        plt.plot(qs[1], -dqs[1], 'o', color='green')
-    plt.xlabel(R'$z$')
-    plt.ylabel(R'$\dot{z}$')
-    plt.grid(True)
-
-    ax = plt.subplot(233)
-    plt.plot(phi, dphi, **kwargs)
-    if qs is not None:
-        plt.plot(qs[2], dqs[2], 'o', color='green')
-        plt.plot(qs[2], -dqs[2], 'o', color='green')
-    plt.xlabel(R'$\phi$')
-    plt.ylabel(R'$\dot{\phi}$')
-    plt.grid(True)
-
-    ax = plt.subplot(234)
-    plt.plot(x, z, **kwargs)
-    if qs is not None:
-        plt.plot(qs[0], qs[1], 'o', color='green')
-    plt.xlabel(R'$x$')
-    plt.ylabel(R'$z$')
-    plt.grid(True)
-
-    ax = plt.subplot(235)
-    plt.plot(x, phi, **kwargs)
-    if qs is not None:
-        plt.plot(qs[0], qs[2], 'o', color='green')
-    plt.xlabel(R'$x$')
-    plt.ylabel(R'$\phi$')
-    plt.grid(True)
-
-    if u1 is not None:
-        ax = plt.subplot(236)
-        plt.plot(t, u1, label=R'$u_1$', **kwargs)
-        plt.plot(t, u2, label=R'$u_2$', **kwargs)
-        if qs is not None:
-            plt.plot(ts, [us[0]] * len(ts), 'o', color='green')
-            plt.plot(ts, [us[1]] * len(ts), 'o', color='green')
-        plt.xlabel(R'$t$')
-        plt.ylabel(R'$u$')
-        plt.legend()
-        plt.grid(True)
-
-    plt.tight_layout()
-
 def save_trajectory(dstfile, traj):
     np.save(dstfile, traj, allow_pickle=True)
 
 def load_trajectory(trajfile):
     traj = np.load(trajfile, allow_pickle=True).item()
     return traj
-
-def test_trajectory(dynamics : Dynamics, trajectory : dict):
-    f = dynamics.rhs
-    t = trajectory['t']
-    q = trajectory['q']
-    dq = trajectory['dq']
-    u = trajectory['u']
-    usp = make_interp_spline(t, u)
-    x = np.concatenate((q, dq), axis=1)
-
-    def rhs(t, x):
-        q = x[0:3]
-        dq = x[3:6]
-        u = usp(t)
-        ans = f(q,dq,u)
-        return np.reshape(ans, (-1,))
-
-    sol = solve_ivp(rhs, [t[0], t[-1]], x[0,:], t_eval=t)
-    t = sol['t']
-    x = sol['y'].T
-    traj1 = {
-        't': t,
-        'q': x[:,0:3],
-        'dq': x[:,3:6],
-    }
-    plt.figure('Compare trajectories')
-    plot_trajectory(traj, ls='--', lw=2)
-    plot_trajectory(traj1, alpha=0.8)
-    plt.tight_layout()
-
 
 def join_trajectories(reduced_trajectory_1, reduced_trajectory_2):
     t1 = reduced_trajectory_1['t']
@@ -404,9 +274,9 @@ def main(dynamics, dstfile):
     Q = find_singular_connection(theta_s, theta_l, theta_r, dynamics, c)
     rd = ReducedDynamics(dynamics, Q)
     tr1 = solve_singular(rd, theta_s, 0.7)
-    tr2 = solve_singular(rd, theta_s, -0.6)
-    tr3 = solve_singular(rd, theta_s, 0.5)
     tr4 = solve_singular(rd, theta_s, -0.45)
+    tr3 = solve_singular(rd, theta_s, 0.5)
+    tr2 = solve_singular(rd, theta_s, -0.6)
     rd_traj = join_several(tr1, tr2, tr3, tr4)
     traj = get_trajectory(dynamics, Q, rd_traj)
     save_trajectory(dstfile, traj)
@@ -415,7 +285,3 @@ if __name__ == '__main__':
     trajfile = 'data/traj.npy'
     dynamics = Dynamics(parameters)
     main(dynamics, trajfile)
-
-    traj = load_trajectory(trajfile)
-    test_trajectory(dynamics, traj)
-    plt.show()

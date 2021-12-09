@@ -118,13 +118,12 @@ def plot_reduced_trajectory(reduced_trajectory):
     plt.ylabel(R'$\dot{\theta}$')
     plt.grid(True)
     
-def solve_singular(rd, theta_s, theta_l, theta_r):
+def solve_singular(rd, theta_s, theta0):
     '''
-        @brief Find periodic trajectory of reduced singular dynamics
+        @brief Find trajectory of reduced singular dynamics
 
         `theta_s` is s.t. alpha(theta_s) = 0
-        `theta_l` is the starting point of the trajectory
-        `theta_r` is the final point of the trajectory
+        `theta_0` is the initial point of the trajectory
     '''
     theta = MX.sym('theta')
     y = MX.sym('y')
@@ -133,41 +132,51 @@ def solve_singular(rd, theta_s, theta_l, theta_r):
     gamma = rd.gamma(theta)
     dy = (-2 * beta * y - gamma) / alpha
     rhs = Function('rhs', [theta, y], [dy])
+    dy_s_expr = (jacobian(beta, theta) * gamma - beta * jacobian(gamma, theta)) / \
+        (jacobian(alpha, theta) * beta + 2 * beta**2)
 
-    # integrate left and right half-trajectories
-    step = 1e-3
-    sol_left = solve_ivp(rhs, [theta_l, theta_s - step], [0], max_step=step)
-    sol_right = solve_ivp(rhs, [theta_r, theta_s + step], [0], max_step=step)
+    # value at singular point
     y_s = float(-rd.gamma(theta_s) / (2 * rd.beta(theta_s)))
     dtheta_s = np.sqrt(2 * y_s)
     rhs_s = jacobian(-gamma/(2*beta), theta)
-    dy_s = substitute(rhs_s, theta, theta_s)
+    dy_s = float(evalf(substitute(dy_s_expr, theta, theta_s)))
     ddtheta_s = float(evalf(dy_s))
 
-    # concatenate left and right parts
-    i = len(sol_left['t'])
-    theta = np.concatenate((sol_left['t'], [theta_s], sol_right['t'][::-1]))
-    y = np.concatenate((sol_left['y'][0], [y_s], sol_right['y'][0,::-1]))
-    dy = rhs(theta, y)
-    dy[i] = float(evalf(dy_s))
+    # integrate left and right half-trajectories
+    step = 1e-3
 
-    # find time
+    if theta0 < theta_s:
+        sol = solve_ivp(rhs, [theta0, theta_s - step], [0], max_step=step)
+    elif theta0 > theta_s:
+        sol = solve_ivp(rhs, [theta0, theta_s + step], [0], max_step=step)
+    else:
+        assert False
+
+    theta = np.concatenate((sol['t'], [theta_s]))
+    y = np.concatenate((sol['y'][0], [y_s]))
+    dy = np.reshape(rhs(sol['t'], sol['y'][0]), (-1,))
+    dy = np.concatenate((dy, [dy_s]))
     dtheta = np.sqrt(2 * y)
     ddtheta = np.reshape(dy, (-1))
+
+    # forward and backward motions
+    theta = np.concatenate((theta[:0:-1], theta))
+    dtheta = np.concatenate((-dtheta[:0:-1], dtheta))
+    ddtheta = np.concatenate((ddtheta[:0:-1], ddtheta))
+    if theta0 > theta_s:
+        dtheta = -dtheta
+
+    # find time
     h = 2 * np.diff(theta) / (dtheta[1:] + dtheta[:-1])
     t = np.concatenate(([0], np.cumsum(h)))
-    ts = t[i]
-
-    # concatenate forard and backward motions
-    theta = np.concatenate((theta, theta[-2::-1]))
-    dtheta = np.concatenate((dtheta, -dtheta[-2::-1]))
-    ddtheta = np.concatenate((ddtheta, ddtheta[-2::-1]))
-    t = np.concatenate((t, 2*t[-1] - t[-2::-1]))
-    period = t[-1]
-    sp = make_interp_spline(t, theta, 5, bc_type='periodic')
+    sp = make_interp_spline(
+        t, theta, k=5,
+        bc_type=([(1, dtheta[0]), (2, ddtheta[0])], [(1, dtheta[-1]), (2, ddtheta[-1])])
+    )
+    ts = t[-1]
 
     # evaluate at uniform time-grid
-    timestep = ts/100
+    timestep = ts / 100
     npts = int((t[-1] - t[0]) / timestep + 1.5)
     tt = np.linspace(t[0], t[-1], npts)
 
@@ -179,7 +188,7 @@ def solve_singular(rd, theta_s, theta_l, theta_r):
         'theta_s': theta_s,
         'dtheta_s': dtheta_s,
         'ddtheta_s': ddtheta_s,
-        't_s': ts
+        't_s': np.array([0, ts])
     }
 
     return rd_traj
@@ -219,8 +228,8 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
     }
 
     t = reduced_trajectory['t']
-    ts = reduced_trajectory['t_s']
-    i = np.argmin((t - ts)**2)
+    # ts = reduced_trajectory['t_s']
+    # i = np.argmin((t - ts)**2)
 
     if 'theta_s' in reduced_trajectory:
         theta_s = reduced_trajectory['theta_s']
@@ -305,8 +314,8 @@ def plot_trajectory(traj, **kwargs):
         plt.plot(t, u1, label=R'$u_1$', **kwargs)
         plt.plot(t, u2, label=R'$u_2$', **kwargs)
         if qs is not None:
-            plt.plot([ts, period-ts], [us[0], us[0]], 'o', color='green')
-            plt.plot([ts, period-ts], [us[1], us[1]], 'o', color='green')
+            plt.plot(ts, [us[0]] * len(ts), 'o', color='green')
+            plt.plot(ts, [us[1]] * len(ts), 'o', color='green')
         plt.xlabel(R'$t$')
         plt.ylabel(R'$u$')
         plt.legend()
@@ -346,10 +355,46 @@ def test_trajectory(dynamics : Dynamics, trajectory : dict):
         'dq': x[:,3:6],
     }
     plt.figure('Compare trajectories')
-    plot_trajectory(traj, ls='--')
-    plot_trajectory(traj1)
+    plot_trajectory(traj, ls='--', lw=2)
+    plot_trajectory(traj1, alpha=0.8)
     plt.tight_layout()
 
+
+def join_trajectories(reduced_trajectory_1, reduced_trajectory_2):
+    t1 = reduced_trajectory_1['t']
+    theta1 = reduced_trajectory_1['theta']
+    dtheta1 = reduced_trajectory_1['dtheta']
+    ddtheta1 = reduced_trajectory_1['ddtheta']
+    ts1 = reduced_trajectory_1['t_s']
+
+    t2 = reduced_trajectory_2['t']
+    theta2 = reduced_trajectory_2['theta']
+    dtheta2 = reduced_trajectory_2['dtheta']
+    ddtheta2 = reduced_trajectory_2['ddtheta']
+    ts2 = reduced_trajectory_2['t_s']
+
+    assert np.allclose(theta1[-1], theta2[0])
+    assert np.allclose(dtheta1[-1], dtheta2[0])
+    assert np.allclose(ddtheta1[-1], ddtheta2[0])
+    theta = np.concatenate((theta1[:-1], theta2))
+    dtheta = np.concatenate((dtheta1[:-1], dtheta2))
+    ddtheta = np.concatenate((ddtheta1[:-1], ddtheta2))
+    t = np.concatenate((t1[:-1], t1[-1] + t2))
+    ts = np.concatenate((ts1, ts2 + t1[-1]))
+    ts = np.unique(ts)
+
+    traj = reduced_trajectory_1.copy()
+    traj['t'] = t
+    traj['theta'] = theta
+    traj['dtheta'] = dtheta
+    traj['ddtheta'] = ddtheta
+    traj['t_s'] = ts
+    return traj
+
+def join_several(*args):
+    if len(args) == 1:
+        return args[0]
+    return join_several(join_trajectories(args[0], args[1]), *args[2:])
 
 def main(dynamics, dstfile):
     c = ServoConnectionParametrized()
@@ -358,14 +403,13 @@ def main(dynamics, dstfile):
     theta_r = 0.5
     Q = find_singular_connection(theta_s, theta_l, theta_r, dynamics, c)
     rd = ReducedDynamics(dynamics, Q)
-    rd_traj = solve_singular(rd, theta_s, theta_l, theta_r)
-
-    plot_reduced_trajectory(rd_traj)
-    plt.tight_layout()
-
+    tr1 = solve_singular(rd, theta_s, 0.7)
+    tr2 = solve_singular(rd, theta_s, -0.6)
+    tr3 = solve_singular(rd, theta_s, 0.5)
+    tr4 = solve_singular(rd, theta_s, -0.45)
+    rd_traj = join_several(tr1, tr2, tr3, tr4)
     traj = get_trajectory(dynamics, Q, rd_traj)
     save_trajectory(dstfile, traj)
-
 
 if __name__ == '__main__':
     trajfile = 'data/traj.npy'

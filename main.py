@@ -20,11 +20,10 @@ def run_simulation(dynamics, trajectory, feedback):
             return True
 
     sim = Simulator(F, feedback, 1e-2)
-    np.random.seed(4)
-    i = np.random.randint(0, len(trajectory['t']) - 1)
-    x0 = trajectory['x'][i]
+    np.random.seed(0)
+    x0 = trajectory['x'][0]
     x0 += 0.2 * np.random.normal(size=x0.shape)
-    t,x,u,s = sim.run(x0, 0, 10)
+    t,x,u,s = sim.run(x0, 0, 20)
     tau,xi = zip(*s)
     tau = np.concatenate([[tau[0]], tau])
     xi = np.concatenate([[xi[0]], xi])
@@ -58,11 +57,11 @@ def main():
 
     dynamics = Dynamics(parameters)
 
-    find_singular_trajectory.main(dynamics, trajfile)
+    # find_singular_trajectory.main(dynamics, trajfile)
     traj = find_singular_trajectory.load_trajectory(trajfile)
-    transverse_linearization.main(dynamics, traj, linsysfile)
+    # transverse_linearization.main(dynamics, traj, linsysfile)
     linsys = transverse_linearization.load_linsys(linsysfile)
-    linsys_feedback.main(traj, linsys, feedbackfile)
+    # linsys_feedback.main(traj, linsys, feedbackfile)
     fb = linsys_feedback.load_feedback(feedbackfile)
     tfb = TransversePeriodicFeedback(traj, fb, linsys)
 

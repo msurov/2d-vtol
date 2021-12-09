@@ -15,8 +15,8 @@ class Parameters:
     Default parameters
 '''
 parameters = Parameters(
-    epsilon=0.2,
-    gravity=1.0
+    epsilon = 0.2,
+    gravity = 1.0
 )
 
 class Dynamics:

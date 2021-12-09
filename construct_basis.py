@@ -81,7 +81,9 @@ def construct_basis(t, x, periodic=None):
         return A(t).dot(E)
 
     R0 = get_vec_basis(tan1)
-    t, R = solve_ivp_mat(rhs, [t1, t2], R0, max_step=1e-3, t_eval=t)
+    pt = time()
+    t, R = solve_ivp_mat(rhs, [t1, t2], R0, max_step=1e-3, t_eval=t, atol=1e-12, rtol=1e-12, method='RK45')
+    pt = time() - pt
 
     # be sure basis is valid
     tmp = np.transpose(R, (0,2,1)) @ R

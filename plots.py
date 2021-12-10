@@ -3,6 +3,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 from matplotlib import rc
 from construct_singular_trajectory import load_trajectory
+from dynamics import parameters
 
 matplotlib.rcParams['font.size'] = 18
 matplotlib.rcParams['pdf.fonttype'] = 42
@@ -135,7 +136,7 @@ def plot_timed_trajectory(trajectory):
     ddq = trajectory['ddq']
     u = trajectory['u']
 
-    plt.figure('Singular Trajectory', figsize=(16,8))
+    plt.figure('Singular trajectory of time', figsize=(16,12))
 
     ax = plt.subplot(221)
     for w in ts: plt.axvline(w, color='gold', lw=2)
@@ -167,20 +168,17 @@ def plot_timed_trajectory(trajectory):
     plt.legend()
     plt.title('Control input')
 
-    plt.tight_layout()
-    plt.show()
-
 if __name__ == '__main__':
     tr = load_trajectory('data/traj.npy')
 
-    # plt.figure('VTOL Singular Trajectory', figsize=(18,8))
-    # ts = tr['t_s']
-    # for i in range(1, len(ts)):
-    #     t = get_subtrajectory(tr, ts[i-1], ts[i])
-    #     plot_trajectory(t)
+    plt.figure('VTOL Singular Trajectory', figsize=(18,8))
+    ts = tr['t_s']
+    for i in range(1, len(ts)):
+        t = get_subtrajectory(tr, ts[i-1], ts[i])
+        plot_trajectory(t)
 
-    # plt.subplot(236)
-    # plt.legend([R'$u_1$', R'$u_2$', R'singularity points'])
-    # plt.show()
+    plt.subplot(236)
+    plt.legend([R'$u_1$', R'$u_2$', R'singularity points'])
 
     plot_timed_trajectory(tr)
+    plt.show()

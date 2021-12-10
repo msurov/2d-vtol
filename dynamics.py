@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from casadi import SX, MX, vertcat, horzcat, sin, cos, Function, pinv
+from casadi import SX, MX, vertcat, horzcat, sin, cos, Function, pinv, cross
 
 mm = MX
 
@@ -15,7 +15,7 @@ class Parameters:
     Default parameters
 '''
 parameters = Parameters(
-    epsilon = 0.0,
+    epsilon = 0.2,
     gravity = 1.0
 )
 
@@ -23,9 +23,9 @@ class Dynamics:
     R'''
         @brief Symbolic expressions of the 2D VTOL dynamics
         \[
-            \ddot{x}&=-u\sin\phi-\varepsilon w\cos\phi\\
-            \ddot{z}&=-1+u\cos\phi-\varepsilon w\sin\phi\\
-            \ddot{\phi}&=w
+            \ddot{x}	= -u_{1}\sin\phi + \varepsilon u_{2}\cos\phi
+            \ddot{z}	= -1+u_{1}\cos\phi + \varepsilon u_{2}\sin\phi
+            \ddot{\phi} = u_{2}
         \]
     '''
     def __init__(self, parameters):
@@ -49,14 +49,12 @@ class Dynamics:
             0
         )
         b2 = vertcat(
-            -epsilon*cos(phi),
-            -epsilon*sin(phi),
+            epsilon*cos(phi),
+            epsilon*sin(phi),
             1
         )
         B = horzcat(b1, b2)
-        B_perp = horzcat(
-            cos(phi), sin(phi), epsilon
-        )
+        B_perp = cross(b1, b2).T
 
         self.nq = 3
         self.nu = 2

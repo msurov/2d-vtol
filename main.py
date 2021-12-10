@@ -59,11 +59,11 @@ def main():
 
     dynamics = Dynamics(parameters)
 
-    construct_singular_trajectory.main(dynamics, trajfile)
+    # construct_singular_trajectory.main(dynamics, trajfile)
     traj = construct_singular_trajectory.load_trajectory(trajfile)
-    transverse_linearization.main(dynamics, traj, linsysfile)
+    # transverse_linearization.main(dynamics, traj, linsysfile)
     linsys = transverse_linearization.load_linsys(linsysfile)
-    linsys_feedback.main(traj, linsys, feedbackfile)
+    # linsys_feedback.main(traj, linsys, feedbackfile)
     fb = linsys_feedback.load_feedback(feedbackfile)
     tfb = TransversePeriodicFeedback(traj, fb, linsys)
 

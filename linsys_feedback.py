@@ -14,7 +14,7 @@ def linsys_periodic_feedback(traj : dict, linsys : dict):
     J = linsys['J']
     A = linsys['A']
     B = linsys['B']
-    Qx = 5 * np.diag([1,10,1,1,1,1])
+    Qx = 0.1 * np.diag([1,1,1,1,1,1])
     R = np.zeros((n, nu, nu))
     Q = np.zeros((n, nx-1, nx-1))
 

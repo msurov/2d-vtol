@@ -1,0 +1,418 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Standard
+Рассмотрим простое уравнение 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+xy'-2by+c=0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+с сингулярностью в нуле и константными коэффициентами.
+ Решение этого уравнения:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $y=\frac{c}{2b}+C_{1}x^{2b}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $y'=2bC_{1}x^{2b-1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $y_{0}x_{0}^{-2b}-\frac{c}{2b}x_{0}^{-2b}=C_{1}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $y=\frac{c}{2b}+\left(y_{0}-\frac{c}{2b}\right)\left(\frac{x}{x_{0}}\right)^{2b}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Непрерывность решения
+\end_layout
+
+\begin_layout Standard
+Функция 
+\begin_inset Formula $y=-\frac{c}{b}+C_{1}x^{-b}$
+\end_inset
+
+ при нецелом отрицательном 
+\begin_inset Formula $b$
+\end_inset
+
+ имеет гладкость порядка 
+\begin_inset Formula $k:=\left\lfloor -b\right\rfloor $
+\end_inset
+
+.
+ Например, 
+\begin_inset Formula $b=-\frac{1}{2}$
+\end_inset
+
+ - гладкость нулевого порядка 
+\begin_inset Formula $k:=\left\lfloor \frac{1}{2}\right\rfloor =0,$
+\end_inset
+
+т.е.
+ функция 
+\begin_inset Formula $y=-\frac{c}{b}+C_{1}\sqrt{x}$
+\end_inset
+
+ непрерывна, но производная имеет разрыв.
+ При 
+\begin_inset Formula $b=-\frac{3}{2}$
+\end_inset
+
+ т.е.
+ 
+\begin_inset Formula $k:=\left\lfloor \frac{3}{2}\right\rfloor =1$
+\end_inset
+
+ получим функцию 
+\begin_inset Formula $y=-\frac{c}{b}+C_{1}\sqrt{x}^{3}$
+\end_inset
+
+ с непрерывной первой производной.
+\end_layout
+
+\begin_layout Subsection
+Пример
+\end_layout
+
+\begin_layout Standard
+Уравнение в статье имеет вид
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\theta\ddot{\theta}-\dot{\theta}^{2}+1=0
+\]
+
+\end_inset
+
+После понижения порядка получим 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\theta y'-2y+1=0
+\]
+
+\end_inset
+
+Решение –
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+y=\frac{1}{2}+C_{1}\theta^{2}
+\]
+
+\end_inset
+
+– бесконечно дифференцируемая функция.
+\end_layout
+
+\begin_layout Standard
+Но если второй коэффициент чуть отличается
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\theta\ddot{\theta}+\left(-1+\nu\right)\dot{\theta}^{2}+1=0
+\]
+
+\end_inset
+
+то уравнение превратится в 
+\begin_inset Formula 
+\[
+\theta y'+\left(-2+2\nu\right)y+1=0
+\]
+
+\end_inset
+
+а решение будет
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+y=-\frac{1}{\left(-2+2\nu\right)}+C_{1}\theta^{-\left(-2+2\nu\right)}
+\]
+
+\end_inset
+
+тогда
+\begin_inset Formula 
+\[
+y=\frac{1}{2-2\nu}+C_{1}\theta^{2-2\nu}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+При малом 
+\begin_inset Formula $0<\nu\ll1$
+\end_inset
+
+ функция 
+\begin_inset Formula $\theta^{2-2\nu}$
+\end_inset
+
+ принадлежит классу 
+\begin_inset Formula $C^{1}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\theta^{2-2\nu}$
+\end_inset
+
+ - непрерывная
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\frac{d}{d\theta}\theta^{2-2\nu}=\left(2-2\nu\right)\theta^{1-2\nu}$
+\end_inset
+
+ - непрерывная 
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\frac{d^{2}}{d\theta^{2}}\theta^{2-2\nu}=\left(2-2\nu\right)\left(1-2\nu\right)\theta^{-2\nu}$
+\end_inset
+
+ - разрывная
+\end_layout
+
+\begin_layout Subsection
+Пример
+\end_layout
+
+\begin_layout Standard
+Уравнение
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\theta\ddot{\theta}-\frac{1}{2}\dot{\theta}^{2}+1=0
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+преобразуется к 
+\begin_inset Formula 
+\[
+\theta y'-y+1=0
+\]
+
+\end_inset
+
+его решением является функция
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+y=1+C_{1}\theta
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Выразим решение как функцию времени 
+\begin_inset Formula 
+\[
+\dot{\theta}=\sqrt{2+2C_{1}\theta}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\dot{\theta}_{0}=\sqrt{2}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\ddot{\theta}=y'=C_{1}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\frac{1}{2C_{1}}\frac{d2+2C_{1}\theta}{\sqrt{2+2C_{1}\theta}}=dt$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\theta=\frac{C_{1}}{2}t^{2}-\frac{1}{C_{1}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+\theta=-\frac{1}{2\theta_{0}}t^{2}+\theta_{0}
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula 
+\[
+t_{s}=\sqrt{2}\left|\theta_{0}\right|
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Решение для исходных координат:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $-1=$
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document

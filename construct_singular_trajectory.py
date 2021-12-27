@@ -4,6 +4,7 @@ import numpy as np
 from scipy.integrate import solve_ivp
 from scipy.interpolate import make_interp_spline, splrep
 from dynamics import Dynamics, get_inv_dynamics, parameters
+from trajectory import save_trajectory, load_trajectory
 
 
 class ServoConnectionParametrized:
@@ -95,10 +96,11 @@ def find_singular_connection(theta_s, theta_l, theta_r, dynamics, parametrized_c
     assert np.all(sol['g'] > -1e-8), 'Solution was not found'
 
     k_found = sol['x']
+    print(f'parameters found {k_found}')
     return parametrized_connection.subs(k_found)
 
 
-def solve_singular(rd, theta_s, theta0):
+def solve_singular(rd, theta_s, theta0, step=1e-3):
     '''
         @brief Find trajectory of reduced singular dynamics
 
@@ -123,8 +125,6 @@ def solve_singular(rd, theta_s, theta0):
     ddtheta_s = float(evalf(dy_s))
 
     # integrate left and right half-trajectories
-    step = 1e-3
-
     if theta0 < theta_s:
         sol = solve_ivp(rhs, [theta0, theta_s - step], [0], max_step=step)
     elif theta0 > theta_s:
@@ -156,7 +156,7 @@ def solve_singular(rd, theta_s, theta0):
     ts = t[-1]
 
     # evaluate at uniform time-grid
-    timestep = ts / 100
+    timestep = ts / 500
     npts = int((t[-1] - t[0]) / timestep + 1.5)
     tt = np.linspace(t[0], t[-1], npts)
 
@@ -221,13 +221,6 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
         traj['u_s'] = np.reshape(u_fun(qs, dqs, ddqs), (-1,))
         traj['t_s'] = reduced_trajectory['t_s']
 
-    return traj
-
-def save_trajectory(dstfile, traj):
-    np.save(dstfile, traj, allow_pickle=True)
-
-def load_trajectory(trajfile):
-    traj = np.load(trajfile, allow_pickle=True).item()
     return traj
 
 def join_trajectories(reduced_trajectory_1, reduced_trajectory_2):

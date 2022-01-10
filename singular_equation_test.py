@@ -5,6 +5,11 @@ from plots import plot_reduced_trajectory, configure
 import matplotlib.pyplot as plt
 import matplotlib
 from matplotlib import rc
+from matplotlib.patches import Rectangle
+import matplotlib.patches as mpatches
+import numpy as np
+from scipy.integrate import solve_ivp
+
 
 matplotlib.rcParams['font.size'] = 14
 matplotlib.rcParams['pdf.fonttype'] = 42
@@ -62,7 +67,8 @@ def uphalf_trajectory(tr):
         't_s': []
     }
 
-def p1():
+
+def trajectories_various_b():
     parameters = Parameters(epsilon = 0, gravity = 1)
     dynamics = Dynamics(parameters)
 
@@ -138,8 +144,144 @@ def p1():
     plt.savefig('fig/singular_timed.pdf')
     plt.show()
 
-def p2():
-    pass
 
-p1()
-plt.show()
+def get_phase_curve(rd, theta_s, theta0, dtheta0, step=1e-2):
+    '''
+        @brief Find trajectory of reduced singular dynamics
+
+        `theta_s` is s.t. alpha(theta_s) = 0
+        `theta_0` is the initial point of the trajectory
+    '''
+    theta = MX.sym('theta')
+    y = MX.sym('y')
+    alpha = rd.alpha(theta)
+    beta = rd.beta(theta)
+    gamma = rd.gamma(theta)
+    dy = (-2 * beta * y - gamma) / alpha
+    rhs = Function('rhs', [theta, y], [dy])
+
+    # value at singular point
+    y_s = float(-rd.gamma(theta_s) / (2 * rd.beta(theta_s)))
+
+    # integrate left and right half-trajectories
+    if theta0 < theta_s:
+        sol = solve_ivp(rhs, [theta0, theta_s - step], [dtheta0**2/2], max_step=step)
+    elif theta0 > theta_s:
+        sol = solve_ivp(rhs, [theta0, theta_s + step], [dtheta0**2/2], max_step=step)
+    else:
+        assert False
+
+    theta = np.concatenate((sol['t'], [theta_s]))
+    y = np.concatenate((sol['y'][0], [y_s]))
+    dtheta = np.sqrt(2 * y)
+
+    return theta, dtheta
+
+def singular_phase_portrait():
+    parameters = Parameters(epsilon = 0, gravity = 1)
+    dynamics = Dynamics(parameters)
+    c = ServoConnection()
+    c = c.subs([1])
+    rd = ReducedDynamics(dynamics, c)
+
+    theta_s = 0
+    trajectories = []
+    _,ax = plt.subplots(1, 1, num='singular phase portrait', figsize=(6,6))
+
+    w = 1.8
+
+    # areas
+    plt.fill_between([-w, w], [1, 1], [-1, -1], alpha=0.2, color='aqua')
+    plt.fill_between([-w, w], [1, 1], [w, w], alpha=0.2, color='yellow')
+    plt.fill_between([-w, w], [-1, -1], [-w, -w], alpha=0.2, color='yellow')
+
+    # axes
+    plt.axhline(0, color='black', lw=0.5)
+
+    # left half-plane
+    color = 'brown'
+    alpha = 0.8
+    lw = 1
+    ls = ':'
+    for theta0 in np.arange(-w, 0, 0.2):
+        theta, dtheta = get_phase_curve(rd, theta_s, theta0, 0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+    
+    for dtheta0 in np.arange(0.5, w, 0.25):
+        theta, dtheta = get_phase_curve(rd, theta_s, -w, dtheta0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    for theta0 in np.arange(-1.5, 0, 0.2):
+        theta, dtheta = get_phase_curve(rd, theta_s, theta0, w)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    # right half-plane
+    for theta0 in np.arange(w, 0, -0.2):
+        theta, dtheta = get_phase_curve(rd, theta_s, theta0, 0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+    
+    for dtheta0 in np.arange(0.5, w, 0.25):
+        theta, dtheta = get_phase_curve(rd, theta_s, w, dtheta0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    for theta0 in np.arange(1.5, 0, -0.2):
+        theta, dtheta = get_phase_curve(rd, theta_s, theta0, w)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    # main trajectory
+    color = 'green'
+    theta0 = 1
+    lw = 3
+    theta, dtheta = get_phase_curve(rd, theta_s, theta0, 0)
+    plt.plot(theta, dtheta, color=color, lw=lw, alpha=1)
+    plt.plot(theta, -dtheta, color=color, lw=lw, alpha=1)
+    theta0 = -1
+    theta, dtheta = get_phase_curve(rd, theta_s, theta0, 0)
+    plt.plot(theta, dtheta, color=color, lw=lw, alpha=1)
+    plt.plot(theta, -dtheta, color=color, lw=lw, alpha=1)
+
+    # rectangle
+    r = Rectangle([-0.03,-0.96], 2*0.03, 2*0.96, fill=True, lw=1, 
+        facecolor='white', edgecolor='black', joinstyle='round', alpha=1)
+    r.set_zorder(100)
+    ax.add_patch(r)
+    r = Rectangle([-0.03,1.04], 2*0.03, 1, fill=True, lw=1, 
+        facecolor='white', edgecolor='black', joinstyle='round', alpha=1)
+    r.set_zorder(100)
+    ax.add_patch(r)
+    r = Rectangle([-0.03,-1.04], 2*0.03, -1, fill=True, lw=1, 
+        facecolor='white', edgecolor='black', joinstyle='round', alpha=1)
+    r.set_zorder(2)
+    ax.add_patch(r)
+
+    # labels and box
+    plt.xlabel(R'$\theta$', fontdict=font, labelpad=-8)
+    plt.ylabel(R'$\dot \theta$', fontdict=font, labelpad=-10)
+    plt.xticks([-1,0,1], [-1,'',1])
+    plt.yticks([-1,0,1], [-1,'',1])
+    plt.grid(True, ls='--')
+    ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
+    ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
+    ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
+    ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
+    plt.xlim(-w, w)
+    plt.ylim(-w, w)
+    plt.subplots_adjust(left=0.15, bottom=0.1, right=0.99, top=0.99)
+
+    periodic_bar = mpatches.Patch(color='aqua', label='periodic')
+    nonperiodic_bar = mpatches.Patch(color='yellow', label='non-periodic')
+    forbidden_bar = mpatches.Patch(facecolor='white', edgecolor='black', label='no trajectories')
+    plt.legend(handles=[periodic_bar,nonperiodic_bar,forbidden_bar], loc='lower right', )
+
+    plt.savefig('fig/singular_field.pdf')
+
+if __name__ == '__main__':
+    # trajectories_various_b()
+    singular_phase_portrait()
+    plt.show()

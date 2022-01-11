@@ -9,17 +9,17 @@ from trajectory import save_trajectory, load_trajectory
 
 class ServoConnectionParametrized:
     def __init__(self):
-        k = MX.sym('k', 4) # parameters of the servo-connection
+        k = MX.sym('k', 5) # parameters of the servo-connection
         theta = MX.sym('theta')
         Q = vertcat(
             theta,
-            k[0] * theta**2,
-            k[1] + k[2] * theta + k[3] * theta**2
+            k[0] * theta + k[1] * theta**2,
+            k[2] + k[3] * theta + k[4] * theta**2
         )
         self.theta = theta
         self.parameters = k
-        self.parameters_min = [-2, 0, -2, -2]
-        self.parameters_max = [2, np.pi, 2, 2]
+        self.parameters_min = [-1, -2, 0, -2, -2]
+        self.parameters_max = [1, 2, np.pi, 2, 2]
         self.Q = Function('Q', [theta], [Q])
     
     def subs(self, parameters):
@@ -60,13 +60,12 @@ def find_singular_connection(theta_s, theta_l, theta_r, dynamics, parametrized_c
     beta_s = rd.beta(theta_s)
 
     smoothness = 3
-    threshold = 0.01
-    npts = 5
+    npts = 8
 
     constraints = [
         alpha_s,
         -alpha_s,
-        d_alpha_s - threshold,
+        d_alpha_s - 0.1,
         -smoothness/2 * d_alpha_s - beta_s
     ]
     pts = np.concatenate((
@@ -262,9 +261,7 @@ def join_several(*args):
 def main(dynamics, dstfile):
     c = ServoConnectionParametrized()
     theta_s = 0.
-    theta_l = -0.5
-    theta_r = 0.5
-    Q = find_singular_connection(theta_s, theta_l, theta_r, dynamics, c)
+    Q = find_singular_connection(theta_s, -1, 1, dynamics, c)
     rd = ReducedDynamics(dynamics, Q)
     tr1 = solve_singular(rd, theta_s, 0.7)
     tr4 = solve_singular(rd, theta_s, -0.45)

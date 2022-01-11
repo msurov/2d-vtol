@@ -84,7 +84,7 @@ def plot_phase_projections():
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
-    plt.yticks([-1.8, -1.2, -0.6, 0., 0.6, 1.2, 1.8], [-1.8, -1.2, -0.6, '', 0.6, 1.2, 1.8])
+    plt.yticks([-1.5, -1.0, -0.5, 0., 0.5, 1., 1.5], [-1.5, -1., -0.5, '', 0.5, 1.0, 1.5])
     plt.xticks([1*np.pi/4, 2*np.pi/4, 3*np.pi/4], [R'$\frac 1 4 \pi$', R'', R'$\frac 3 4\pi$'])
     plt.xlabel(R'$\phi$', fontdict=font, labelpad=-15)
     plt.ylabel(R'$\dot \phi$', fontdict=font, labelpad=-15)
@@ -103,7 +103,7 @@ def plot_phase_projections():
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
-    plt.yticks([-2, 0, 2], [-2, '', 2])
+    plt.yticks([-4, -2, 0, 2], [-4, -2, '', 2])
     plt.ylabel(R'$u_1$', fontdict=font, labelpad=0)
 
     ax = axes[1]
@@ -116,8 +116,8 @@ def plot_phase_projections():
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
-    plt.xticks([0, 2, 4, 6, 8], [0, 2, '', 6, 8])
-    plt.yticks([-2, 0, 2], [-2, '', 2])
+    plt.xticks([0, 2, 4, 6], [0, 2, 4, 6])
+    plt.yticks([-4, -2, 0, 2], [-4, -2, '', 2])
     plt.xlabel(R'$t$', fontdict=font, labelpad=-5)
     plt.ylabel(R'$u_2$', fontdict=font, labelpad=0)
     plt.subplots_adjust(left=0.15, bottom=0.12, right=0.99, top=0.99, hspace=0.)
@@ -159,7 +159,7 @@ def plot_timed_transient():
     plt.plot(t, xsim, lw=1.5, alpha=0.5, color='blue')
     for w in ts:
         plt.axvline(w, color='green', alpha=0.4, ls='--')
-    plt.grid(True, ls='--')
+    plt.grid(True, axis='y', ls='--')
     ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
@@ -174,13 +174,13 @@ def plot_timed_transient():
     plt.plot(t, zsim, lw=1.5, alpha=0.5, color='blue')
     for w in ts:
         plt.axvline(w, color='green', alpha=0.4, ls='--')
-    plt.grid(True, ls='--')
+    plt.grid(True, axis='y', ls='--')
     ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
     plt.ylabel(R'$z$', fontdict=font, labelpad=-5)
-    plt.yticks([-0.4, -0.2, 0.0], [-0.4, '', 0.0])
+    plt.yticks([-0.5, -0.25, 0., 0.25, 0.5], [-0.5, '', '', '', 0.5])
 
     # t-phi
     ax = axes[2]
@@ -189,7 +189,7 @@ def plot_timed_transient():
     plt.plot(t, phisim, lw=1.5, alpha=0.5, color='blue')
     for w in ts:
         plt.axvline(w, color='green', alpha=0.4, ls='--')
-    plt.grid(True, ls='--')
+    plt.grid(True, axis='y', ls='--')
     ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
@@ -210,13 +210,13 @@ def plot_timed_transient():
     plt.plot(t, usim[:,0], lw=1.5, alpha=0.5, color='blue')
     for w in ts:
         plt.axvline(w, color='green', alpha=0.4, ls='--')
-    plt.grid(True, ls='--')
+    plt.grid(True, axis='y', ls='--')
     ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
-    plt.ylabel(R'$u_1$', fontdict=font, labelpad=-3)
-    plt.yticks([-2.0, 0., 2.], [-2.0, 0.0, 2.0])
+    plt.ylabel(R'$u_1$', fontdict=font, labelpad=0)
+    plt.yticks([-4, -2, 0, 2], [-4, -2, 0, 2])
 
     # t-u2
     ax = axes[1]
@@ -225,13 +225,13 @@ def plot_timed_transient():
     plt.plot(t, usim[:,1], lw=1.5, alpha=0.5, color='blue')
     for w in ts:
         plt.axvline(w, color='green', alpha=0.4, ls='--')
-    plt.grid(True, ls='--')
+    plt.grid(True, axis='y', ls='--')
     ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
-    plt.ylabel(R'$u_2$', fontdict=font, labelpad=-3)
-    plt.yticks([-2.0, 0., 2.], [-2.0, 0.0, 2.0])
+    plt.ylabel(R'$u_2$', fontdict=font, labelpad=0)
+    plt.yticks([-4, -2, 0, 2], [-4, -2, 0, 2])
     plt.xlabel(R'$t$', fontdict=font, labelpad=0)
     plt.subplots_adjust(left=0.16, bottom=0.10, right=0.99, top=0.99, hspace=0.05)
 
@@ -267,7 +267,7 @@ def plot_timed_transient():
     plt.ylabel(R'$\tau$', fontdict=font, labelpad=2)
     plt.xlabel(R'$t$', fontdict=font, labelpad=-6)
     plt.yticks([0,5,10,15], [0,5,10,15])
-    plt.subplots_adjust(left=0.16, bottom=0.12, right=0.99, top=0.98, hspace=0.05)
+    plt.subplots_adjust(left=0.16, bottom=0.09, right=0.99, top=0.99, hspace=0.05)
 
     plt.savefig('fig/transient-transverse.pdf')
 
@@ -276,3 +276,5 @@ if __name__ == '__main__':
     plot_phase_projections()
     plot_timed_transient()
     plt.show()
+
+

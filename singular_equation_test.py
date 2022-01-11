@@ -1,5 +1,5 @@
-from construct_singular_trajectory import solve_singular,ReducedDynamics,join_several
-from casadi import pi,arctan,vertcat,MX,substitute,Function
+from construct_singular_trajectory import solve_singular,ReducedDynamics,join_several,ServoConnectionParametrized
+from casadi import pi,arctan,vertcat,MX,substitute,Function,rootfinder
 from dynamics import Dynamics, get_inv_dynamics, Parameters
 from plots import plot_reduced_trajectory, configure
 import matplotlib.pyplot as plt
@@ -142,7 +142,6 @@ def trajectories_various_b():
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
     plt.subplots_adjust(left=0.15, bottom=0.1, right=0.99, top=0.99)
     plt.savefig('fig/singular_timed.pdf')
-    plt.show()
 
 
 def get_phase_curve(rd, theta_s, theta0, dtheta0, step=1e-2):
@@ -281,7 +280,113 @@ def singular_phase_portrait():
 
     plt.savefig('fig/singular_field.pdf')
 
+
+def concatenate_solutions_demo():
+    parameters = Parameters(epsilon = 0.2, gravity = 1)
+    dynamics = Dynamics(parameters)
+    c = ServoConnectionParametrized()
+    c = c.subs([-0.18, -0.40, 1.6, -1.3, -0.20])
+    rd = ReducedDynamics(dynamics, c)
+
+    theta_s_fun = rootfinder('singularity', 'newton', rd.alpha)
+    theta_s = float(theta_s_fun(0.))
+    print('theta_s', theta_s)
+
+    y_s = float(-rd.gamma(theta_s) / (2 * rd.beta(theta_s)))
+    dtheta_s = np.sqrt(2 * y_s)
+    print('dtheta_s', dtheta_s)
+
+    d_alpha = rd.alpha.jac()
+    s = -2 * d_alpha(theta_s, 0) / rd.beta(theta_s)
+    print('smothness', s)
+
+    trajectories = []
+    _,ax = plt.subplots(1, 1, num='singular_solution', figsize=(6, 4))
+
+    l = -1
+    r = 0.5
+
+    ls = '-'
+    alpha = 0.3
+    lw = 1
+
+    color = 'darkblue'
+    for dtheta0 in np.arange(0.5, 2.1, 0.2):
+        theta, dtheta = get_phase_curve(rd, theta_s, l, dtheta0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+    color = 'darkred'
+    for dtheta0 in np.arange(0.5, 2.1, 0.2):
+        theta, dtheta = get_phase_curve(rd, theta_s, r, dtheta0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    # rectangles
+    patch = Rectangle([theta_s-0.01, dtheta_s + 0.03], 2*0.01, 1, fill=True, lw=1, 
+        facecolor='gray', edgecolor='black', joinstyle='round', alpha=1)
+    patch.set_zorder(100)
+    ax.add_patch(patch)
+
+    patch = Rectangle([theta_s-0.01, dtheta_s - 0.03], 2*0.01, -1, fill=True, lw=1, 
+        facecolor='gray', edgecolor='black', joinstyle='round', alpha=1)
+    patch.set_zorder(100)
+    ax.add_patch(patch)
+
+    # main trajectory
+    dtheta1 = 0.7
+    dtheta2 = 1.5
+    alpha = 0.8
+    lw = 3
+    ls = '-'
+    n = 13
+    theta, dtheta = get_phase_curve(rd, theta_s, l, dtheta1)
+    plt.plot(theta[n:], dtheta[n:], lw=lw, ls=ls)
+    p1 = np.array([theta[n], dtheta[n]])
+    theta, dtheta = get_phase_curve(rd, theta_s, r, dtheta2)
+    plt.plot(theta[n:], dtheta[n:], lw=lw, ls=ls)
+    p2 = np.array([theta[n], dtheta[n]])
+
+    plt.plot(*p1, 'o', color='black')
+    plt.plot(*p2, 'o', color='black')
+
+    plt.annotate(f'$p_1$',
+        xy = p1 + np.array([-0.05, 0.07]),
+        horizontalalignment='center',
+        verticalalignment='center',
+        font=font
+    )
+
+    plt.annotate(f'$p_2$',
+        xy = p2 + np.array([0.03, 0.09]),
+        horizontalalignment='center',
+        verticalalignment='center',
+        font=font
+    )
+
+    plt.annotate(f'forbidden',
+        xy = [theta_s - 0.02, dtheta_s - 0.2],
+        xytext = [theta_s - 0.4, dtheta_s - 0.3],
+        arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center'
+    )
+
+    plt.xticks([p1[0], theta_s, p2[0]], [R'$\theta_1$', R'$\theta_s$', R'$\theta_2$'], font=font)
+    plt.yticks([p1[1], dtheta_s, p2[1]], [R'$\dot{\theta}_1$', R'$\dot{\theta}_s$', R'$\dot{\theta}_2$'], font=font)
+    plt.grid(True, ls=':')
+    ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
+    ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
+    ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
+    ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
+    plt.xlim(l, r)
+    plt.ylim(0.7, 1.6)
+    plt.subplots_adjust(left=0.10, bottom=0.1, right=0.99, top=0.99)
+
+    plt.savefig('fig/singular_solution.pdf')
+
+
+
 if __name__ == '__main__':
     # trajectories_various_b()
-    singular_phase_portrait()
+    # singular_phase_portrait()
+    concatenate_solutions_demo()
     plt.show()

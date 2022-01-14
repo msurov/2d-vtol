@@ -24,6 +24,12 @@ font = {
     'size': 24,
 }
 
+font_small = {
+    'family': 'Latin Modern Math',
+    'weight': 'normal',
+    'size': 18,
+}
+
 class ServoConnection:
     def __init__(self):
         b = MX.sym('b')
@@ -384,9 +390,155 @@ def concatenate_solutions_demo():
     plt.savefig('fig/singular_solution.pdf')
 
 
+def full_phase_portrait_demo():
+    parameters = Parameters(epsilon = 0.2, gravity = 1)
+    dynamics = Dynamics(parameters)
+    c = ServoConnectionParametrized()
+    c = c.subs([-0.18, -0.40, 1.6, -1.3, -0.20])
+    rd = ReducedDynamics(dynamics, c)
+
+    alpha_roots = rootfinder('singularity', 'newton', rd.alpha)
+    theta_s = float(alpha_roots(0.))
+    print('theta_s', theta_s)
+
+    y_s = float(-rd.gamma(theta_s) / (2 * rd.beta(theta_s)))
+    dtheta_s = np.sqrt(2 * y_s)
+    print('dtheta_s', dtheta_s)
+
+    gamma_roots = rootfinder('singularity', 'newton', rd.gamma)
+    theta_1 = float(gamma_roots(-1.))
+    print('theta_1', theta_1)
+    theta_2 = float(gamma_roots(1.))
+    print('theta_2', theta_2)
+
+    d_alpha = rd.alpha.jac()
+    s = -2 * d_alpha(theta_s, 0) / rd.beta(theta_s)
+    print('smothness', s)
+
+    l = -1
+    r = 0.5
+    ls = '-'
+    alpha = 0.3
+    lw = 1
+    color = 'darkblue'
+
+    _,ax = plt.subplots(1, 1, num='full_phase', figsize=(6, 4))
+
+    # periodic
+    color = 'darkblue'
+    ls = '-'
+    for theta0 in np.arange(theta_1 + 0.01, theta_s, 0.1):
+        theta, dtheta = get_phase_curve(rd, theta_s, theta0, 0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    for theta0 in np.arange(theta_2 - 0.01, theta_s, -0.1):
+        theta, dtheta = get_phase_curve(rd, theta_s, theta0, 0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    # non-periodic
+    left = theta_1 - 0.1
+    right = theta_2 + 0.1
+    color = 'darkred'
+    ls = '-'
+    for p in np.linspace(0.035, 0.98, 30):
+        dtheta0 = 3/2 * dtheta_s * np.tan(p * np.pi/2)
+        theta, dtheta = get_phase_curve(rd, theta_s, left, dtheta0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    for p in np.linspace(0.04, 0.96, 25):
+        dtheta0 = 3/2 * dtheta_s * np.tan(p * np.pi/2)
+        theta, dtheta = get_phase_curve(rd, theta_s, right, dtheta0)
+        plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+        plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    # homoclinics
+    color = 'darkblue'
+    ls = '-'
+    lw = 1
+    alpha = 1
+    theta, dtheta = get_phase_curve(rd, theta_s, theta_1, 0.01)
+    plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+    plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    theta, dtheta = get_phase_curve(rd, theta_s, theta_2, 0.01)
+    plt.plot(theta, dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+    plt.plot(theta, -dtheta, color=color, alpha=alpha, lw=lw, ls=ls)
+
+    # rectangles
+    patch = Rectangle([theta_s-0.01, dtheta_s + 0.05], 2*0.01, 1, fill=True, lw=1, 
+        facecolor='gray', edgecolor='black', joinstyle='round', alpha=1)
+    patch.set_zorder(100)
+    ax.add_patch(patch)
+
+    patch = Rectangle([theta_s-0.01, -dtheta_s - 0.05], 2*0.01, -1, fill=True, lw=1, 
+        facecolor='gray', edgecolor='black', joinstyle='round', alpha=1)
+    patch.set_zorder(100)
+    ax.add_patch(patch)
+
+    patch = Rectangle([theta_s-0.01, dtheta_s - 0.05], 2*0.01, -2 * (dtheta_s - 0.05), fill=True, lw=1, 
+        facecolor='gray', edgecolor='black', joinstyle='round', alpha=1)
+    patch.set_zorder(100)
+    ax.add_patch(patch)
+
+    # annotations
+
+    plt.annotate(f'transition point', 
+        xy=[theta_s + 0.05, dtheta_s + 0.05],
+        xytext=[theta_s + 0.75, dtheta_s + 0.3], 
+        arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center',
+        font=font_small
+    )
+    plt.annotate(f'saddle point', 
+        xy=[theta_1, 0.07],
+        xytext=[theta_1 + 0.5, 1.3], 
+        arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center',
+        font=font_small
+    )
+    plt.annotate(f'forbidden set', 
+        xy=[theta_s - 0.05, -dtheta_s - 0.3],
+        xytext=[theta_s - 0.9, -dtheta_s - 0.3],
+        arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center',
+        font=font_small
+    )
+    plt.annotate(f'forbidden set', 
+        xy=[theta_s - 0.05, -dtheta_s + 0.5],
+        xytext=[theta_s - 0.9, -dtheta_s - 0.3],
+        arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center',
+        font=font_small
+    )
+    plt.axhline(0, color='black', alpha=0.3)
+    plt.xticks([theta_1, theta_s, theta_2], [R'$\theta_1$', R'$\theta_s$', R'$\theta_2$'], font=font)
+    plt.yticks([-dtheta_s, 0, dtheta_s], [R'$\dot{\theta}_s$', '0', R'$\dot{\theta}_s$'], font=font)
+    plt.grid(True, ls='--')
+    ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
+    ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
+    ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
+    ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
+    plt.xlim(left, right)
+    plt.ylim(-3/2 * dtheta_s, 3/2 * dtheta_s)
+    plt.subplots_adjust(left=0.10, bottom=0.1, right=0.99, top=0.99)
+
+    plt.savefig('fig/full_phase.pdf')
+
 
 if __name__ == '__main__':
     # trajectories_various_b()
     # singular_phase_portrait()
-    concatenate_solutions_demo()
+    # concatenate_solutions_demo()
+    full_phase_portrait_demo()
     plt.show()

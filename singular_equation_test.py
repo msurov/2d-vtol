@@ -113,7 +113,8 @@ def trajectories_various_b():
             arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
             bbox=dict(boxstyle="round", fc="w"),
             horizontalalignment='center',
-            verticalalignment='center'
+            verticalalignment='center',
+            font=font_small
         )
 
     plt.xlabel(R'$\theta$', fontdict=font, labelpad=-10)
@@ -281,8 +282,8 @@ def singular_phase_portrait():
 
     periodic_bar = mpatches.Patch(color='aqua', label='periodic')
     nonperiodic_bar = mpatches.Patch(color='yellow', label='non-periodic')
-    forbidden_bar = mpatches.Patch(facecolor='white', edgecolor='black', label='no trajectories')
-    plt.legend(handles=[periodic_bar,nonperiodic_bar,forbidden_bar], loc='lower right', )
+    forbidden_bar = mpatches.Patch(facecolor='white', edgecolor='black', label='forbidden set')
+    plt.legend(handles=[periodic_bar,nonperiodic_bar,forbidden_bar], loc='lower right')
 
     plt.savefig('fig/singular_field.pdf')
 
@@ -367,13 +368,14 @@ def concatenate_solutions_demo():
         font=font
     )
 
-    plt.annotate(f'forbidden',
+    plt.annotate(f'forbidden set',
         xy = [theta_s - 0.02, dtheta_s - 0.2],
-        xytext = [theta_s - 0.4, dtheta_s - 0.3],
+        xytext = [theta_s - 0.35, dtheta_s - 0.3],
         arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
         bbox=dict(boxstyle="round", fc="w"),
         horizontalalignment='center',
-        verticalalignment='center'
+        verticalalignment='center',
+        font=font_small
     )
 
     plt.xticks([p1[0], theta_s, p2[0]], [R'$\theta_1$', R'$\theta_s$', R'$\theta_2$'], font=font)
@@ -522,7 +524,7 @@ def full_phase_portrait_demo():
         font=font_small
     )
     plt.axhline(0, color='black', alpha=0.3)
-    plt.xticks([theta_1, theta_s, theta_2], [R'$\theta_1$', R'$\theta_s$', R'$\theta_2$'], font=font)
+    plt.xticks([theta_1, theta_s, theta_2], [R'$\theta_a$', R'$\theta_s$', R'$\theta_b$'], font=font)
     plt.yticks([-dtheta_s, 0, dtheta_s], [R'$\dot{\theta}_s$', '0', R'$\dot{\theta}_s$'], font=font)
     plt.grid(True, ls='--')
     ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
@@ -536,9 +538,77 @@ def full_phase_portrait_demo():
     plt.savefig('fig/full_phase.pdf')
 
 
+def plot_surface():
+    _,ax = plt.subplots(1, 1, num='full_phase', figsize=(5, 3))
+    left = -1
+    right = 1
+    top = 1
+    bottom = -1
+    y = np.linspace(-1, 1, 100)
+    x = 0.07 * np.sin(5*y) - 0.1 * y - 0.12 * y**2
+    ax.fill_betweenx(y, left, x, color='lightsteelblue', alpha=1, aa=True)
+    ax.fill_betweenx(y, x, right, color='wheat', alpha=1., aa=True)
+    plt.plot(x, y, ls='-', lw=1, color='black')
+
+    x1,y1 = [-0.6, 0.3]
+    x2,y2 = [0.7, -0.1]
+
+    chebval = np.polynomial.chebyshev.chebval
+    p = np.array([0.33864647, 0.97454924, 0.14886482, 0.16216355, 0.47085517, 0.71569845])
+    t = np.linspace(-1, 1, 100)
+    v = chebval(t, p)
+    v = (v - v[0]) / (v[-1] - v[0])
+    x = x1 + (x2 - x1) * (t - t[0]) / (t[-1] - t[0])
+    y = y1 + (y2 - y1) * v
+
+    plt.plot(x, y, '--', color='red')
+    plt.plot(x1, y1, 'o', color='black')
+    plt.plot(x2, y2, 'o', color='black')
+
+    plt.annotate(R'$A$', [x1, y1 + 0.1], font=font)
+    plt.annotate(R'$B$', [x2, y2 + 0.1], font=font)
+
+    plt.annotate(
+        'half-space\n' + R'$B^\perp(q) M(q) \dot q < 0$', 
+        [-0.5, -0.7], 
+        font=font_small,
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center',
+    )
+
+    plt.annotate(
+        'half-space\n' + R'$B^\perp(q) M(q) \dot q > 0$', 
+        [0.5, -0.7], 
+        font=font_small,
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center',
+    )
+
+    plt.annotate(f'hypersurface $S$', 
+        xy=[-0.05, 0.57],
+        xytext=[0.6, 0.7], 
+        arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
+        bbox=dict(boxstyle="round", fc="w"),
+        horizontalalignment='center',
+        verticalalignment='center',
+        font=font_small
+    )
+
+    plt.xlim(left, right)
+    plt.ylim(bottom, top)
+
+    plt.xticks([])
+    plt.yticks([])
+    plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
+
+    plt.savefig('fig/half_space.pdf')
+
 if __name__ == '__main__':
     # trajectories_various_b()
     # singular_phase_portrait()
     # concatenate_solutions_demo()
-    full_phase_portrait_demo()
+    # full_phase_portrait_demo()
+    plot_surface()
     plt.show()

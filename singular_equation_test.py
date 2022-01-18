@@ -1,5 +1,5 @@
 from construct_singular_trajectory import solve_singular,ReducedDynamics,join_several,ServoConnectionParametrized
-from casadi import pi,arctan,vertcat,MX,substitute,Function,rootfinder
+from casadi import pi,arctan,vertcat,MX,substitute,Function,rootfinder,sin,cos,jacobian
 from dynamics import Dynamics, get_inv_dynamics, Parameters
 from plots import plot_reduced_trajectory, configure
 import matplotlib.pyplot as plt
@@ -486,7 +486,6 @@ def full_phase_portrait_demo():
     ax.add_patch(patch)
 
     # annotations
-
     plt.annotate(f'transition point', 
         xy=[theta_s + 0.05, dtheta_s + 0.05],
         xytext=[theta_s + 0.75, dtheta_s + 0.3], 
@@ -538,77 +537,125 @@ def full_phase_portrait_demo():
     plt.savefig('fig/full_phase.pdf')
 
 
-def plot_surface():
-    _,ax = plt.subplots(1, 1, num='full_phase', figsize=(5, 3))
-    left = -1
-    right = 1
-    top = 1
-    bottom = -1
-    y = np.linspace(-1, 1, 100)
-    x = 0.07 * np.sin(5*y) - 0.1 * y - 0.12 * y**2
-    ax.fill_betweenx(y, left, x, color='lightsteelblue', alpha=1, aa=True)
-    ax.fill_betweenx(y, x, right, color='wheat', alpha=1., aa=True)
-    plt.plot(x, y, ls='-', lw=1, color='black')
+def vector_field():
+    parameters = Parameters(epsilon = 0.2, gravity = 1)
+    dynamics = Dynamics(parameters)
+    c = ServoConnectionParametrized()
+    c = c.subs([-0.18, -0.40, 1.6, -1.3, -0.20])
+    rd = ReducedDynamics(dynamics, c)
 
-    x1,y1 = [-0.6, 0.3]
-    x2,y2 = [0.7, -0.1]
+    alpha_roots = rootfinder('singularity', 'newton', rd.alpha)
+    theta_s = float(alpha_roots(0.))
+    print('theta_s', theta_s)
 
-    chebval = np.polynomial.chebyshev.chebval
-    p = np.array([0.33864647, 0.97454924, 0.14886482, 0.16216355, 0.47085517, 0.71569845])
-    t = np.linspace(-1, 1, 100)
-    v = chebval(t, p)
-    v = (v - v[0]) / (v[-1] - v[0])
-    x = x1 + (x2 - x1) * (t - t[0]) / (t[-1] - t[0])
-    y = y1 + (y2 - y1) * v
+    y_s = float(-rd.gamma(theta_s) / (2 * rd.beta(theta_s)))
+    dtheta_s = np.sqrt(2 * y_s)
+    print('dtheta_s', dtheta_s)
 
-    plt.plot(x, y, '--', color='red')
+    theta = np.linspace(-2, 2, 201)
+    dtheta = np.linspace(-4*dtheta_s/3, 4*dtheta_s/3, 200)
+
+    alpha = np.reshape(rd.alpha(theta), (-1,))
+    beta = np.reshape(rd.beta(theta), (-1,))
+    gamma = np.reshape(rd.gamma(theta), (-1,))
+
+    U = np.outer(np.ones(len(theta)), dtheta)
+    V = -(np.outer(beta, dtheta**2) + gamma[:,np.newaxis]) / alpha[:,np.newaxis]
+
+    plt.streamplot(theta, dtheta, U.T, V.T, linewidth=1, color='gray')
+
+
+def singular_solutions():
+    xl = 0.200
+    xr = xl + 1
+    yb = 0.6
+    yt = yb + 1
+
+    x1 = xl + 0.1
+    x2 = xr - 0.1
+    y1 = yb + 0.1
+    y2 = yt - 0.2
+
+    t = MX.sym('t')
+    cx_expr = x1 + (x2 - x1) * t
+    cy_expr = y1 + (y2 - y1) * t**2
+    tx_expr = jacobian(cx_expr, t)
+    ty_expr = jacobian(cy_expr, t)
+    ux = cy_expr
+    uy = -cx_expr
+    z = ux * tx_expr + uy * ty_expr
+    fun = Function('vectorfiledsangle', [t], [z])
+    sing_eq = rootfinder('singularity', 'newton', fun)
+    ts = float(sing_eq(1.))
+    sx = float(substitute(cx_expr, t, ts))
+    sy = float(substitute(cy_expr, t, ts))
+
+    n = 20
+    x = np.linspace(xl, xr, n)
+    y = np.linspace(yb, yt, n)
+
+    X,Y = np.meshgrid(x, y)
+
+    U = Y
+    V = -X
+
+    _,ax = plt.subplots(1, 1, num='full_phase', figsize=(4, 4))
+    plt.axis('equal')
+
+    plt.streamplot(x, y, U, V, linewidth=1, color='gray')
+
+    t = np.linspace(0, 1, 100)
+    x = x1 + (x2 - x1) * t
+    y = y1 + (y2 - y1) * t**2
+    plt.plot(x, y, lw=2, color='blue')
+
     plt.plot(x1, y1, 'o', color='black')
+    plt.annotate(f'$A$', 
+        xy=[x1, y1 + 0.08],
+        bbox=dict(boxstyle="round", fc="w"),
+        font=font_small,
+        horizontalalignment='center',
+    )
     plt.plot(x2, y2, 'o', color='black')
-
-    plt.annotate(R'$A$', [x1, y1 + 0.1], font=font)
-    plt.annotate(R'$B$', [x2, y2 + 0.1], font=font)
-
-    plt.annotate(
-        'half-space\n' + R'$B^\perp(q) M(q) \dot q < 0$', 
-        [-0.5, -0.7], 
-        font=font_small,
+    plt.annotate(f'$B$', 
+        xy=[x2, y2 + 0.08],
         bbox=dict(boxstyle="round", fc="w"),
+        font=font_small,
         horizontalalignment='center',
-        verticalalignment='center',
     )
 
-    plt.annotate(
-        'half-space\n' + R'$B^\perp(q) M(q) \dot q > 0$', 
-        [0.5, -0.7], 
-        font=font_small,
-        bbox=dict(boxstyle="round", fc="w"),
-        horizontalalignment='center',
-        verticalalignment='center',
-    )
-
-    plt.annotate(f'hypersurface $S$', 
-        xy=[-0.05, 0.57],
-        xytext=[0.6, 0.7], 
+    plt.plot(sx, sy, 'o', color='red')
+    plt.annotate(f'singularity', 
+        xy=[sx - 0.04, sy + 0.005],
+        xytext=[sx - 0.4, sy + 0.05], 
         arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
         bbox=dict(boxstyle="round", fc="w"),
         horizontalalignment='center',
-        verticalalignment='center',
-        font=font_small
+        verticalalignment='center'
     )
-
-    plt.xlim(left, right)
-    plt.ylim(bottom, top)
-
+    plt.axhline(0, color='black', alpha=0.3)
     plt.xticks([])
     plt.yticks([])
-    plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
+    plt.xlabel(R'$q_1$', fontdict=font)
+    plt.ylabel(R'$q_2$', fontdict=font)
+    ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
+    ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
+    ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
+    ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
+    plt.xlim(xl, xr)
+    plt.ylim(yb, yt)
+    b1 = mpatches.Patch(color='gray', label=R'$B^\perp M$ vector field')
+    b2 = mpatches.Patch(color='blue', label='trajectory')
+    plt.legend(handles=[b1,b2], loc='upper left')
+    plt.subplots_adjust(left=0.10, bottom=0.1, right=0.99, top=0.99)
 
-    plt.savefig('fig/half_space.pdf')
+    plt.savefig('fig/singularity_condition.pdf')
 
 if __name__ == '__main__':
     # trajectories_various_b()
     # singular_phase_portrait()
     # concatenate_solutions_demo()
     # full_phase_portrait_demo()
-    plot_surface()
+    # vector_field()
+    singular_solutions()
     plt.show()

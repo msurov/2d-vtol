@@ -566,9 +566,9 @@ def vector_field():
 
 
 def singular_solutions():
-    xl = 0.200
+    xl = -1.91
     xr = xl + 1
-    yb = 0.6
+    yb = 0.44
     yt = yb + 1
 
     x1 = xl + 0.1
@@ -581,8 +581,8 @@ def singular_solutions():
     cy_expr = y1 + (y2 - y1) * t**2
     tx_expr = jacobian(cx_expr, t)
     ty_expr = jacobian(cy_expr, t)
-    ux = cy_expr
-    uy = -cx_expr
+    ux = (cx_expr + 0.3 * cy_expr) / np.sqrt(cx_expr**2 + cy_expr**2 + 1)
+    uy = (cy_expr - 0.3 * cx_expr) / np.sqrt(cx_expr**2 + cy_expr**2 + 1)
     z = ux * tx_expr + uy * ty_expr
     fun = Function('vectorfiledsangle', [t], [z])
     sing_eq = rootfinder('singularity', 'newton', fun)
@@ -590,64 +590,75 @@ def singular_solutions():
     sx = float(substitute(cx_expr, t, ts))
     sy = float(substitute(cy_expr, t, ts))
 
-    n = 20
+    # vector field
+    n = 50
     x = np.linspace(xl, xr, n)
     y = np.linspace(yb, yt, n)
-
     X,Y = np.meshgrid(x, y)
-
-    U = Y
-    V = -X
+    n = np.sqrt(X**2 + Y**2 + 1)
+    U = (X + 0.3 * Y) / n
+    V = (Y - 0.3 * X) / n
 
     _,ax = plt.subplots(1, 1, num='full_phase', figsize=(4, 4))
     plt.axis('equal')
 
     plt.streamplot(x, y, U, V, linewidth=1, color='gray')
 
-    t = np.linspace(0, 1, 100)
+    # curve
+    t = np.linspace(-0.2, 1.2, 100)
+    x = x1 + (x2 - x1) * t
+    y = y1 + (y2 - y1) * t**2
+    plt.plot(x, y, lw=0.5, ls='--', color='blue')
+    t = np.linspace(-0, 1, 100)
     x = x1 + (x2 - x1) * t
     y = y1 + (y2 - y1) * t**2
     plt.plot(x, y, lw=2, color='blue')
 
     plt.plot(x1, y1, 'o', color='black')
-    plt.annotate(f'$A$', 
-        xy=[x1, y1 + 0.08],
-        bbox=dict(boxstyle="round", fc="w"),
+    plt.annotate(R'$A$', 
+        xy=[x1 - 0.02, y1 + 0.06],
+        bbox=dict(boxstyle="round", fc="w", ec="w"),
         font=font_small,
         horizontalalignment='center',
     )
     plt.plot(x2, y2, 'o', color='black')
-    plt.annotate(f'$B$', 
-        xy=[x2, y2 + 0.08],
-        bbox=dict(boxstyle="round", fc="w"),
+    plt.annotate(R'$B$', 
+        xy=[x2 - 0.02, y2 + 0.06],
+        bbox=dict(boxstyle="round", fc="w", ec="w"),
         font=font_small,
         horizontalalignment='center',
     )
 
     plt.plot(sx, sy, 'o', color='red')
-    plt.annotate(f'singularity', 
-        xy=[sx - 0.04, sy + 0.005],
-        xytext=[sx - 0.4, sy + 0.05], 
+    plt.annotate(R'singularity', 
+        xy=[sx - 0.03, sy + 0.01],
+        xytext=[sx - 0.3, sy + 0.1], 
         arrowprops=dict(facecolor='black', shrink=1, width=0.5, headlength=14, headwidth=8),
         bbox=dict(boxstyle="round", fc="w"),
         horizontalalignment='center',
         verticalalignment='center'
     )
+    plt.annotate(R'configuration space $\mathcal{Q}$', 
+        xy=[xr - 0.32, yb + 0.05],
+        bbox=dict(boxstyle="round", fc="w", ec="w"),
+        font=font_small,
+        horizontalalignment='center',
+    )
     plt.axhline(0, color='black', alpha=0.3)
     plt.xticks([])
     plt.yticks([])
-    plt.xlabel(R'$q_1$', fontdict=font)
-    plt.ylabel(R'$q_2$', fontdict=font)
+    # plt.xlabel(R'$q_1$', fontdict=font)
+    # plt.ylabel(R'$q_2$', fontdict=font)
     ax.xaxis.set_tick_params(which='major', size=5, width=1, direction='in', top='on')
     ax.xaxis.set_tick_params(which='minor', size=2, width=1, direction='in', top='on')
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
     plt.xlim(xl, xr)
     plt.ylim(yb, yt)
-    b1 = mpatches.Patch(color='gray', label=R'$B^\perp M$ vector field')
+    b1 = mpatches.Patch(color='gray', label=R'$B^\perp(q) M(q)$ covector field')
     b2 = mpatches.Patch(color='blue', label='trajectory')
     plt.legend(handles=[b1,b2], loc='upper left')
-    plt.subplots_adjust(left=0.10, bottom=0.1, right=0.99, top=0.99)
+    plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
 
     plt.savefig('fig/singularity_condition.pdf')
 

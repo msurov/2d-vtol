@@ -98,6 +98,89 @@ def find_singular_connection(theta_s, theta_l, theta_r, dynamics, parametrized_c
     print(f'parameters found {k_found}')
     return parametrized_connection.subs(k_found)
 
+def rd_traj_reverse(rd_traj):
+    t = rd_traj['t']
+    theta = rd_traj['theta']
+    dtheta = rd_traj['dtheta']
+    ddtheta = rd_traj['ddtheta']
+    theta_s = rd_traj['theta_s']
+    dtheta_s = rd_traj['dtheta_s']
+    ddtheta_s = rd_traj['ddtheta_s']
+
+    return {
+        't': t[-1] - t[::-1],
+        'theta': theta[::-1],
+        'dtheta': -dtheta[::-1],
+        'ddtheta': ddtheta[::-1],
+        'theta_s': theta_s,
+        'dtheta_s': dtheta_s,
+        'ddtheta_s': ddtheta_s,
+        't_s': t[-1] - rd_traj['t_s'][::-1]
+    }
+
+def solve_singular_2(rd, theta_s, theta0, dtheta0, step=1e-3):
+    theta = MX.sym('theta')
+    y = MX.sym('y')
+    alpha = rd.alpha(theta)
+    beta = rd.beta(theta)
+    gamma = rd.gamma(theta)
+    dy = (-2 * beta * y - gamma) / alpha
+    rhs = Function('rhs', [theta, y], [dy])
+    dy_s_expr = (jacobian(beta, theta) * gamma - beta * jacobian(gamma, theta)) / \
+        (jacobian(alpha, theta) * beta + 2 * beta**2)
+
+    # value at singular point
+    y_s = float(-rd.gamma(theta_s) / (2 * rd.beta(theta_s)))
+    dtheta_s = np.sqrt(2 * y_s)
+    rhs_s = jacobian(-gamma/(2*beta), theta)
+    dy_s = float(evalf(substitute(dy_s_expr, theta, theta_s)))
+    ddtheta_s = float(evalf(dy_s))
+
+    # integrate left and right half-trajectories
+    if theta0 < theta_s - step:
+        sol = solve_ivp(rhs, [theta0, theta_s - step], [0], max_step=step)
+    elif theta0 > theta_s + step:
+        sol = solve_ivp(rhs, [theta0, theta_s + step], [0], max_step=step)
+    else:
+        assert False
+
+    theta = np.concatenate((sol['t'], [theta_s]))
+    y = np.concatenate((sol['y'][0], [y_s]))
+    dy = np.reshape(rhs(sol['t'], sol['y'][0]), (-1,))
+    dy = np.concatenate((dy, [dy_s]))
+    dtheta = np.sqrt(2 * y)
+    ddtheta = np.reshape(dy, (-1))
+
+    if theta0 > theta_s:
+        dtheta = -dtheta
+
+    # find time
+    h = 2 * np.diff(theta) / (dtheta[1:] + dtheta[:-1])
+    t = np.concatenate(([0], np.cumsum(h)))
+    sp = make_interp_spline(
+        t, theta, k=5,
+        bc_type=([(1, dtheta[0]), (2, ddtheta[0])], [(1, dtheta[-1]), (2, ddtheta[-1])])
+    )
+    ts = t[-1]
+
+    # evaluate at uniform time-grid
+    timestep = ts / 500
+    npts = int((t[-1] - t[0]) / timestep + 1.5)
+    tt = np.linspace(t[0], t[-1], npts)
+
+    rd_traj = {
+        't': tt,
+        'theta': sp(tt),
+        'dtheta': sp(tt, 1),
+        'ddtheta': sp(tt, 2),
+        'theta_s': theta_s,
+        'dtheta_s': dtheta_s,
+        'ddtheta_s': ddtheta_s,
+        't_s': np.array([ts])
+    }
+
+    return rd_traj
+    
 
 def solve_singular(rd, theta_s, theta0, step=1e-3):
     '''
@@ -124,9 +207,9 @@ def solve_singular(rd, theta_s, theta0, step=1e-3):
     ddtheta_s = float(evalf(dy_s))
 
     # integrate left and right half-trajectories
-    if theta0 < theta_s:
+    if theta0 < theta_s - step:
         sol = solve_ivp(rhs, [theta0, theta_s - step], [0], max_step=step)
-    elif theta0 > theta_s:
+    elif theta0 > theta_s + step:
         sol = solve_ivp(rhs, [theta0, theta_s + step], [0], max_step=step)
     else:
         assert False

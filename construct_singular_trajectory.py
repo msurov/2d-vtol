@@ -282,7 +282,7 @@ def get_trajectory(dynamics, constraint, reduced_trajectory):
 
     traj = {
         't': reduced_trajectory['t'],
-        'x': x,
+        'state': x,
         'q': x[:,0:3],
         'dq': x[:,3:6],
         'ddq': np.array(ddq).T,

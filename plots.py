@@ -24,7 +24,6 @@ def plot_trajectory_projections(traj : dict, **kwargs):
     x,z,phi = traj['q'].T
     dx,dz,dphi = traj['dq'].T
     t = traj['t']
-    period = t[-1]
 
     if 'u' in traj:
         u1,u2 = traj['u'].T
@@ -143,7 +142,7 @@ def get_subtrajectory(trajectory, t1, t2):
 
     result = trajectory.copy()
     result['t'] = trajectory['t'][mask]
-    result['x'] = trajectory['x'][mask]
+    result['state'] = trajectory['state'][mask]
     result['q'] = trajectory['q'][mask]
     result['dq'] = trajectory['dq'][mask]
     result['ddq'] = trajectory['ddq'][mask]
@@ -158,7 +157,6 @@ def get_subtrajectory(trajectory, t1, t2):
 def plot_timed_trajectory(trajectory):
     t = trajectory['t']
     ts = trajectory['t_s']
-    x = trajectory['x']
     q = trajectory['q']
     dq = trajectory['dq']
     ddq = trajectory['ddq']

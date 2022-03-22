@@ -126,5 +126,6 @@ def lqr_ltv_periodic(t, A, B, Q, R):
     for i in range(N):
         K[i] = -inv_R[i] @ B[i].T @ P[i]
 
+    K[-1] = K[0]
+    P[-1] = P[0]
     return K, P
-

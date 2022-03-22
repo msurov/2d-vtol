@@ -17,10 +17,10 @@ class TransversePeriodicFeedback:
         self.t_prev = None
 
         self.window = 0.2
-        self.x_ref = traj['x']
+        self.st_ref = traj['state']
         self.u_ref = traj['u']
 
-        self.x_sp = make_interp_spline(self.t, self.x_ref, bc_type='periodic')
+        self.st_sp = make_interp_spline(self.t, self.st_ref, bc_type='periodic')
         self.u_sp = make_interp_spline(self.t, self.u_ref, bc_type='periodic')
 
         self.K_sp = make_interp_spline(fb['t'], fb['K'], bc_type='periodic')
@@ -36,13 +36,13 @@ class TransversePeriodicFeedback:
 
         self.state = None
 
-    def proj(self, x):
+    def proj(self, st):
         def f(t):
-            d = self.x_sp(t) - x
+            d = self.st_sp(t) - st
             return d.T @ d
 
         if self.t_prev is None:
-            d = np.linalg.norm(self.x_ref - x, axis=1)
+            d = np.linalg.norm(self.st_ref - st, axis=1)
             i = np.argmin(d)
             t1 = max(self.t[i] - self.window/2, self.t[0])
             t2 = min(self.t[i] + self.window/2, self.t[-1])
@@ -53,14 +53,14 @@ class TransversePeriodicFeedback:
             t = fminbound(f, t1, t2, maxfun=20, disp=0)
         return t
 
-    def get_tau_xi(self, x):
-        tau = self.proj(x)
-        x_ref = self.x_sp(tau)
-        xi = self.E_sp(tau).T @ (x - x_ref)
+    def get_tau_xi(self, st):
+        tau = self.proj(st)
+        st_ref = self.st_sp(tau)
+        xi = self.E_sp(tau).T @ (st - st_ref)
         return tau, xi
 
-    def process(self, x):
-        tau, xi = self.get_tau_xi(x)
+    def process(self, st):
+        tau, xi = self.get_tau_xi(st)
         self.t_prev = tau
         self.xi = xi.copy()
         u = self.u_sp(tau) + self.K_sp(tau) @ xi

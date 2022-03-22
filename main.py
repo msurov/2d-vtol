@@ -11,7 +11,7 @@ from simulator import Simulator
 import matplotlib.pyplot as plt
 
 
-def run_simulation(dynamics, trajectory, feedback, saveto):
+def run_simulation(dynamics, trajectory, feedback, saveto, simtime=10, tstart=0):
     def F(x, u):
         dx = dynamics.rhs(x[0:3], x[3:6], u)
         return np.reshape(dx, (-1,))
@@ -20,7 +20,7 @@ def run_simulation(dynamics, trajectory, feedback, saveto):
         if np.linalg.norm(tfb.xi) > 0.1:
             return True
 
-    xsp = make_interp_spline(trajectory['t'], trajectory['x'], k=3, bc_type='periodic')
+    stsp = make_interp_spline(trajectory['t'], trajectory['state'], k=3, bc_type='periodic')
     usp = make_interp_spline(trajectory['t'], trajectory['u'], k=3, bc_type='periodic')
 
     sim = Simulator(F, feedback, 1e-3)
@@ -29,7 +29,7 @@ def run_simulation(dynamics, trajectory, feedback, saveto):
     x0[0] = 1.2
     x0[1] = -0.5
 
-    t,x,u,s = sim.run(x0, 0, 20)
+    t,st,u,s = sim.run(x0, tstart, simtime)
     tau,xi = zip(*s)
     tau = np.concatenate([[tau[0]], tau])
     xi = np.concatenate([[xi[0]], xi])
@@ -37,9 +37,9 @@ def run_simulation(dynamics, trajectory, feedback, saveto):
         't': t,
         'tau': tau,
         'xi': xi,
-        'q': x[:,0:3],
-        'dq': x[:,3:6],
-        'x': x,
+        'q': st[:,0:3],
+        'dq': st[:,3:6],
+        'state': st,
         'u': u
     }
     save_trajectory(saveto, real_traj)
@@ -58,7 +58,7 @@ def main():
     linsys_feedback.main(traj, linsys, feedbackfile)
     fb = linsys_feedback.load_feedback(feedbackfile)
     tfb = TransversePeriodicFeedback(traj, fb, linsys)
-    run_simulation(dynamics, traj, tfb, simfile)
+    run_simulation(dynamics, traj, tfb, simfile, simtime=30)
     realtraj = load_trajectory(simfile)
     plot_trajectory_projections(traj, ls='--', lw=2)
     plot_trajectory_projections(realtraj, alpha=0.5)

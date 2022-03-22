@@ -27,7 +27,8 @@ def set_annotation(ax, text):
 
 class AnimateQuadrotor:
     def __init__(self, simdata, reftraj):
-        simt = simdata['tau']
+        simt = simdata['t']
+        simtau = simdata['tau']
         simq = simdata['q']
         simu = simdata['u']
         reft = reftraj['t']
@@ -64,7 +65,7 @@ class AnimateQuadrotor:
         periodic = np.allclose(refq[0], refq[-1])
         bc_type = 'periodic' if periodic else None
         refsp = make_interp_spline(reft, refq, k=3, bc_type=bc_type)
-        refq = refsp(simt)
+        refq = refsp(simtau)
 
         ax_x = fig.add_subplot(spec[0, 2])
         scope_x = Scope(ax_x, color='blue', alpha=0.5, lw=2)
@@ -86,7 +87,7 @@ class AnimateQuadrotor:
         periodic = np.allclose(refu[0], refu[-1])
         bc_type = 'periodic' if periodic else None
         refsp = make_interp_spline(reft, refu, k=3, bc_type=bc_type)
-        refu = refsp(simt)
+        refu = refsp(simtau)
 
         ax_u1 = fig.add_subplot(spec[2, 2], sharex=ax_x)
         scope_u1 = Scope(ax_u1, color='blue', alpha=0.5, lw=2)
@@ -145,15 +146,17 @@ class AnimateQuadrotor:
             self.scope_u1.update(ti, u[0])
             self.scope_u2.update(ti, u[1])
             return self.get_patches()
-
+        
         anim = animation.FuncAnimation(self.fig, animupdate, init_func=animinit, frames=nframes, blit=True)
         if filepath is not None:
             if filepath.endswith('.gif'):
-                writer='imagemagick'
+                Writer = animation.writers['imagemagick']
+                writer = Writer(fps=fps)
+                anim.save(filepath, writer, dpi=40)
             else:
                 Writer = animation.writers['ffmpeg']
-                writer = Writer(fps=60, metadata=dict(artist='Maksim Surov'), bitrate=800*60)
-            anim.save(filepath, writer)
+                writer = Writer(fps=fps, metadata=dict(artist='Maksim Surov'), bitrate=800*60)
+                anim.save(filepath, writer)
         else:
             plt.show()
 
@@ -162,5 +165,4 @@ if __name__ == '__main__':
     sim = load_trajectory('data/sim.npy')
     traj = load_trajectory('data/traj.npy')
     anim = AnimateQuadrotor(sim, traj)
-    anim.run(animtime=20, filepath='data/anim.mp4')
-    # anim.run(animtime=10)
+    anim.run(animtime=10, fps=30, filepath='data/anim.gif')

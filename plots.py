@@ -200,10 +200,10 @@ if __name__ == '__main__':
         plot_trajectory_projections(t)
 
     plt.tight_layout()
-    plt.savefig('fig/found_phase.svg')
+    plt.savefig('fig/found_phase.pdf')
 
     plot_timed_trajectory(tr)
     plt.tight_layout()
-    plt.savefig('fig/found_timed.svg')
+    plt.savefig('fig/found_timed.pdf')
 
     plt.show()

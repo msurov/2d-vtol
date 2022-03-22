@@ -11,7 +11,7 @@ from simulator import Simulator
 import matplotlib.pyplot as plt
 
 
-def run_simulation(dynamics, trajectory, feedback, saveto, simtime=10, tstart=0):
+def run_simulation(dynamics, feedback, saveto, simtime=10, tstart=0):
     def F(x, u):
         dx = dynamics.rhs(x[0:3], x[3:6], u)
         return np.reshape(dx, (-1,))
@@ -19,9 +19,6 @@ def run_simulation(dynamics, trajectory, feedback, saveto, simtime=10, tstart=0)
     def stopcnd():
         if np.linalg.norm(tfb.xi) > 0.1:
             return True
-
-    stsp = make_interp_spline(trajectory['t'], trajectory['state'], k=3, bc_type='periodic')
-    usp = make_interp_spline(trajectory['t'], trajectory['u'], k=3, bc_type='periodic')
 
     sim = Simulator(F, feedback, 1e-3)
     np.random.seed(0)
@@ -58,7 +55,7 @@ def main():
     linsys_feedback.main(traj, linsys, feedbackfile)
     fb = linsys_feedback.load_feedback(feedbackfile)
     tfb = TransversePeriodicFeedback(traj, fb, linsys)
-    run_simulation(dynamics, traj, tfb, simfile, simtime=30)
+    run_simulation(dynamics, tfb, simfile, simtime=30)
     realtraj = load_trajectory(simfile)
     plot_trajectory_projections(traj, ls='--', lw=2)
     plot_trajectory_projections(realtraj, alpha=0.5)

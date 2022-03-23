@@ -67,7 +67,7 @@ def load_path_patches(svgpath):
         style = get_style_props(a)
         fillcolor = get_fill_clolor(style)
         if fillcolor is not None:
-            obj = PathPatch(path, fill = True, fc = fillcolor, ec=None, lw=0)
+            obj = PathPatch(path, fill = True, fc = fillcolor, ec='white', lw=0.2)
         else:
             obj = PathPatch(path, fill = False)
         objs += [obj]
@@ -83,6 +83,11 @@ def clone_patches(patches):
     return [clone_pathpatch(pp) for pp in patches]
 
 class Quadrotor:
+    # TODO: configurable dihedral. 
+    # Load separately quadrotor body and propellers,
+    # transform propellers. 
+    # how to define propellers positions in svg? with a group?
+
     def __init__(self, ax, svgpath=None, patches=None):
         self.ax = ax
         self.t0 = Affine2D()
@@ -108,6 +113,10 @@ class Quadrotor:
         t = self.t0 + self.t + self.ax.transData
         for p in self.patches: p.set_transform(t)
     
+    def set_alpha(self, alpha=1):
+        for p in self.patches:
+            p.set_alpha(alpha)
+
     def __copy__(self):
         patches = clone_patches(self.patches)
         q = Quadrotor(self.ax, patches=patches)

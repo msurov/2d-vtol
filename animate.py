@@ -165,4 +165,4 @@ if __name__ == '__main__':
     sim = load_trajectory('data/sim.npy')
     traj = load_trajectory('data/traj.npy')
     anim = AnimateQuadrotor(sim, traj)
-    anim.run(animtime=10, fps=30, filepath='data/anim.gif')
+    anim.run(animtime=20, fps=60, filepath='data/anim.mp4')

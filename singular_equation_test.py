@@ -31,8 +31,7 @@ font_small = {
 }
 
 class ServoConnection:
-    def __init__(self):
-        b = MX.sym('b')
+    def __init__(self, b : float):
         theta = MX.sym('theta')
         Q = vertcat(
             theta,
@@ -40,16 +39,8 @@ class ServoConnection:
             pi/2 - arctan((1 + b) * theta)
         )
         self.theta = theta
-        self.parameters = b
-        self.parameters_min = [0]
-        self.parameters_max = [5]
         self.Q = Function('Q', [theta], [Q])
-    
-    def subs(self, parameters):
-        arg = MX.sym('dummy')
-        Q = substitute(self.Q(arg), self.parameters, parameters)
-        return Function('Q', [arg], [Q])
-    
+   
     def __call__(self, arg):
         return self.Q(arg)
 
@@ -86,8 +77,7 @@ def trajectories_various_b():
     trajectories = []
 
     for b in bvalues:
-        c = ServoConnection()
-        c = c.subs([b])
+        c = ServoConnection(b)
         rd = ReducedDynamics(dynamics, c)
         tr1 = solve_singular(rd, theta_s, theta_l)
         tr2 = solve_singular(rd, theta_s, theta_r)
@@ -129,7 +119,7 @@ def trajectories_various_b():
     plt.xlim(-1.1, 1.1)
     plt.ylim(-0.1, 2.1)
     plt.subplots_adjust(left=0.15, bottom=0.1, right=0.99, top=0.99)
-    plt.savefig('fig/singular_phase.pdf')
+    plt.savefig('fig/singular_phase.svg')
 
     _,ax = plt.subplots(1, 1, num='timed_various_b', figsize=(4,4))
 
@@ -148,7 +138,7 @@ def trajectories_various_b():
     ax.yaxis.set_tick_params(which='major', size=5, width=1, direction='in', right='on')
     ax.yaxis.set_tick_params(which='minor', size=2, width=1, direction='in', right='on')
     plt.subplots_adjust(left=0.15, bottom=0.1, right=0.99, top=0.99)
-    plt.savefig('fig/singular_timed.pdf')
+    plt.savefig('fig/singular_timed.svg')
 
 
 def get_phase_curve(rd, theta_s, theta0, dtheta0, step=1e-2):
@@ -186,8 +176,7 @@ def get_phase_curve(rd, theta_s, theta0, dtheta0, step=1e-2):
 def singular_phase_portrait():
     parameters = Parameters(epsilon = 0, gravity = 1)
     dynamics = Dynamics(parameters)
-    c = ServoConnection()
-    c = c.subs([1])
+    c = ServoConnection(1)
     rd = ReducedDynamics(dynamics, c)
 
     theta_s = 0
@@ -285,7 +274,7 @@ def singular_phase_portrait():
     forbidden_bar = mpatches.Patch(facecolor='white', edgecolor='black', label='forbidden set')
     plt.legend(handles=[periodic_bar,nonperiodic_bar,forbidden_bar], loc='lower right')
 
-    plt.savefig('fig/singular_field.pdf')
+    plt.savefig('fig/singular_field.svg')
 
 
 def concatenate_solutions_demo():
@@ -303,7 +292,7 @@ def concatenate_solutions_demo():
     dtheta_s = np.sqrt(2 * y_s)
     print('dtheta_s', dtheta_s)
 
-    d_alpha = rd.alpha.jac()
+    d_alpha = rd.alpha.jacobian()
     s = -2 * d_alpha(theta_s, 0) / rd.beta(theta_s)
     print('smothness', s)
 
@@ -389,7 +378,7 @@ def concatenate_solutions_demo():
     plt.ylim(0.7, 1.6)
     plt.subplots_adjust(left=0.10, bottom=0.1, right=0.99, top=0.99)
 
-    plt.savefig('fig/singular_solution.pdf')
+    plt.savefig('fig/singular_solution.svg')
 
 
 def full_phase_portrait_demo():
@@ -413,7 +402,7 @@ def full_phase_portrait_demo():
     theta_2 = float(gamma_roots(1.))
     print('theta_2', theta_2)
 
-    d_alpha = rd.alpha.jac()
+    d_alpha = rd.alpha.jacobian()
     s = -2 * d_alpha(theta_s, 0) / rd.beta(theta_s)
     print('smothness', s)
 
@@ -534,7 +523,7 @@ def full_phase_portrait_demo():
     plt.ylim(-3/2 * dtheta_s, 3/2 * dtheta_s)
     plt.subplots_adjust(left=0.10, bottom=0.1, right=0.99, top=0.99)
 
-    plt.savefig('fig/full_phase.pdf')
+    plt.savefig('fig/full_phase.svg')
 
 
 def vector_field():
@@ -660,13 +649,13 @@ def singular_solutions():
     plt.legend(handles=[b1,b2], loc='upper left')
     plt.subplots_adjust(left=0.01, bottom=0.01, right=0.99, top=0.99)
 
-    plt.savefig('fig/singularity_condition.pdf')
+    plt.savefig('fig/singularity_condition.svg')
 
 if __name__ == '__main__':
-    # trajectories_various_b()
-    # singular_phase_portrait()
-    # concatenate_solutions_demo()
-    # full_phase_portrait_demo()
-    # vector_field()
+    trajectories_various_b()
+    singular_phase_portrait()
+    concatenate_solutions_demo()
+    full_phase_portrait_demo()
+    vector_field()
     singular_solutions()
     plt.show()

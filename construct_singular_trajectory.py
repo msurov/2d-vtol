@@ -20,15 +20,11 @@ class ServoConnectionParametrized:
         self.parameters = k
         self.parameters_min = [-1, -2, 0, -2, -2]
         self.parameters_max = [1, 2, np.pi, 2, 2]
-        self.Q = Function('Q', [theta], [Q])
+        self.Q = Q
     
     def subs(self, parameters):
-        arg = MX.sym('dummy')
-        Q = substitute(self.Q(arg), self.parameters, parameters)
-        return Function('Q', [arg], [Q])
-    
-    def __call__(self, arg):
-        return self.Q(arg)
+        Q = substitute(self.Q, self.parameters, parameters)
+        return Function('Q', [self.theta], [Q])
 
 class ReducedDynamics:
     def __init__(self, dynamics, connection):
